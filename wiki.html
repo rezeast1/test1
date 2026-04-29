@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WikiBase</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2eb;
+    --surface: #fdfbf7;
+    --surface2: #f0ece2;
+    --border: #d8d0bc;
+    --border-light: #e8e2d6;
+    --text: #1a1714;
+    --text-muted: #6b6459;
+    --text-faint: #9e958a;
+    --accent: #2d5a8e;
+    --accent-light: #e8eef6;
+    --accent2: #7a4f2b;
+    --red: #8b2020;
+    --green: #2a5e2a;
+    --tag-bg: #ede8df;
+    --tag-text: #4a4239;
+    --highlight: #f5e642;
+    --highlight-keyword: #ffe0b2;
+  }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 16px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo span { color: var(--accent2); }
+
+  /* ─── SEARCH ─── */
+  .search-wrap {
+    flex: 1;
+    max-width: 600px;
+    position: relative;
+  }
+  .search-input-row {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    transition: box-shadow 0.15s;
+  }
+  .search-input-row:focus-within {
+    box-shadow: 0 0 0 3px rgba(45,90,142,0.18);
+    border-color: var(--accent);
+  }
+  #searchInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 10px 14px;
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px;
+    color: var(--text);
+    background: transparent;
+  }
+  #searchInput::placeholder { color: var(--text-faint); }
+  .search-btn {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 0 16px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.15s;
+  }
+  .search-btn:hover { background: #1e4070; }
+
+  /* dropdown */
+  .search-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    overflow: hidden;
+    z-index: 200;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .search-dropdown.open { display: block; }
+  .dropdown-section-label {
+    padding: 8px 14px 4px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--surface2);
+  }
+  .dropdown-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: var(--accent-light); }
+  .dropdown-item.keyword-match .di-title { color: var(--accent); font-weight: 600; }
+  .di-icon {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    background: var(--tag-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .di-body { flex: 1; min-width: 0; }
+  .di-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'Playfair Display', serif;
+  }
+  .di-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .di-snippet {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .di-snippet mark {
+    background: var(--highlight);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+  .di-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--highlight-keyword);
+    color: #5a3800;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .di-badge.in-text { background: #e8f0fe; color: #1a3a6e; }
+  .no-results {
+    padding: 20px 14px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2px 0;
+  }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+  }
+  .sidebar h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .sidebar-articles {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sidebar-articles li a {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    cursor: pointer;
+  }
+  .sidebar-articles li a:hover,
+  .sidebar-articles li a.active {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 12px 0;
+  }
+  .sidebar-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .tag {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 3px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .tag:hover { background: var(--border); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main { min-width: 0; }
+
+  /* article card */
+  .article-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    display: none;
+  }
+  .article-card.visible { display: block; }
+
+  .article-header {
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .article-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .article-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .article-tag {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .article-body {
+    padding: 1.5rem 2rem;
+  }
+  .article-body p { margin-bottom: 1rem; }
+  .article-body h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--text);
+  }
+  .article-body mark {
+    background: var(--highlight);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  /* home grid */
+  .home-view { display: block; }
+  .home-view.hidden { display: none; }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .grid-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px rgba(45,90,142,0.1);
+  }
+  .gc-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 5px;
+  }
+  .gc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text);
+  }
+  .gc-excerpt {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  /* search results page */
+  .search-results-view { display: none; }
+  .search-results-view.visible { display: block; }
+  .results-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .results-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .results-header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .result-group-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 1.5rem 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-group-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+  .result-item {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .result-item:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(45,90,142,0.08); }
+  .ri-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .ri-meta { font-size: 11px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+  .ri-snippet { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+  .ri-snippet mark {
+    background: var(--highlight);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  @media (max-width: 700px) {
+    .container { grid-template-columns: 1fr; padding: 1rem; }
+    .sidebar { display: none; }
+    .article-title { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" onclick="showHome()">Wiki<span>Base</span></a>
+  <div class="search-wrap">
+    <div class="search-input-row">
+      <input type="text" id="searchInput" placeholder="Поиск статей..." autocomplete="off" />
+      <button class="search-btn" onclick="runFullSearch()">⌕</button>
+    </div>
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+</header>
+
+<div class="container">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3>Статьи</h3>
+    <ul class="sidebar-articles" id="sidebarList"></ul>
+    <div class="sidebar-divider"></div>
+    <h3>Теги</h3>
+    <div class="sidebar-tags" id="sidebarTags"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HOME -->
+    <div class="home-view" id="homeView">
+      <div class="section-title">Все статьи</div>
+      <div class="articles-grid" id="articlesGrid"></div>
+    </div>
+
+    <!-- SEARCH RESULTS -->
+    <div class="search-results-view" id="searchResultsView">
+      <div class="results-header">
+        <h2 id="resultsTitle"></h2>
+        <p id="resultsSubtitle"></p>
+      </div>
+      <div id="resultsBody"></div>
+    </div>
+
+    <!-- ARTICLE -->
+    <div id="articleView"></div>
+
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ДАННЫЕ — добавляй свои статьи сюда
+═══════════════════════════════════════════════ */
+const articles = [
+  {
+    id: 1,
+    title: "Нейронные сети",
+    category: "Информатика",
+    tags: ["ИИ", "машинное обучение", "глубокое обучение"],
+    icon: "🧠",
+    body: `
+      <p>Нейронная сеть — это математическая модель, вдохновлённая структурой биологического мозга. Она состоит из слоёв узлов (нейронов), каждый из которых обрабатывает входные данные и передаёт результат дальше.</p>
+      <h2>История</h2>
+      <p>Первые работы по нейронным сетям появились в 1940-х годах — Маккаллок и Питтс описали формальный нейрон в 1943 году. Перцептрон Розенблатта (1958) стал первым обучаемым алгоритмом. После длительного затишья, в 2010-х произошёл взрывной рост — благодаря развитию GPU и появлению больших датасетов.</p>
+      <h2>Архитектуры</h2>
+      <p>Существуют различные типы нейронных сетей: полносвязные (Dense), свёрточные (CNN) для работы с изображениями, рекуррентные (RNN, LSTM) для последовательностей, трансформеры для текста. Каждый тип оптимизирован под определённый класс задач.</p>
+      <h2>Применение</h2>
+      <p>Нейронные сети применяются в распознавании речи и образов, машинном переводе, генерации текста и изображений, автономных системах управления, медицинской диагностике и многих других областях.</p>
+    `
+  },
+  {
+    id: 2,
+    title: "Квантовая физика",
+    category: "Физика",
+    tags: ["квантовая механика", "волны", "частицы"],
+    icon: "⚛️",
+    body: `
+      <p>Квантовая физика — раздел физики, описывающий поведение материи и энергии на атомном и субатомном уровнях. Она радикально изменила наше представление о природе реальности.</p>
+      <h2>Основные принципы</h2>
+      <p>Корпускулярно-волновой дуализм утверждает, что все частицы одновременно обладают свойствами волн. Принцип неопределённости Гейзенберга говорит о том, что невозможно одновременно точно измерить и положение, и импульс частицы.</p>
+      <h2>Суперпозиция и запутанность</h2>
+      <p>Квантовая суперпозиция позволяет частице находиться в нескольких состояниях одновременно. Квантовая запутанность — явление, при котором два объекта остаются связанными независимо от расстояния между ними.</p>
+      <h2>Применения</h2>
+      <p>Квантовая физика лежит в основе полупроводниковых технологий, лазеров, МРТ-томографов. Квантовые компьютеры обещают революцию в вычислениях, криптографии и моделировании молекул.</p>
+    `
+  },
+  {
+    id: 3,
+    title: "История Шёлкового пути",
+    category: "История",
+    tags: ["торговля", "Азия", "культура", "Средние века"],
+    icon: "🗺️",
+    body: `
+      <p>Великий Шёлковый путь — сеть торговых маршрутов, связывавших Восток и Запад на протяжении более тысячи лет. Маршруты протянулись от Китая через Центральную Азию до Средиземноморья.</p>
+      <h2>Возникновение</h2>
+      <p>Путь возник во II веке до н.э. при китайской династии Хань. Китайский дипломат Чжан Цянь установил первые контакты с народами Центральной Азии, открыв путь для торговли шёлком, специями и другими товарами.</p>
+      <h2>Товары и культура</h2>
+      <p>По пути везли не только шёлк — торговали фарфором, пряностями, стеклом, драгоценными камнями. Но ценнее товаров были идеи: по этому пути распространялись религии, технологии, языки и художественные традиции.</p>
+      <h2>Роль Казахстана</h2>
+      <p>Территория современного Казахстана играла ключевую роль в этой торговой сети. Города Отрар, Тараз и Туркестан были важными узлами пути, где купцы отдыхали, торговали и обменивались знаниями.</p>
+    `
+  },
+  {
+    id: 4,
+    title: "Фотосинтез",
+    category: "Биология",
+    tags: ["растения", "химия", "энергия", "хлорофилл"],
+    icon: "🌿",
+    body: `
+      <p>Фотосинтез — процесс, посредством которого зелёные растения, водоросли и некоторые бактерии преобразуют световую энергию в химическую, запасая её в форме глюкозы.</p>
+      <h2>Уравнение реакции</h2>
+      <p>Общее уравнение: 6CO₂ + 6H₂O + свет → C₆H₁₂O₆ + 6O₂. Углекислый газ и вода при участии солнечного света превращаются в сахар и кислород — именно этот кислород мы и вдыхаем.</p>
+      <h2>Световая и тёмная фазы</h2>
+      <p>Световая фаза происходит на мембранах тилакоидов хлоропластов. Поглощая фотоны, хлорофилл запускает цепь реакций, создавая АТФ и NADPH. Тёмная фаза (цикл Кальвина) использует эту энергию для фиксации CO₂ и синтеза глюкозы.</p>
+      <h2>Значение</h2>
+      <p>Фотосинтез — основа практически всех пищевых цепочек на Земле. Кроме того, он регулирует содержание CO₂ в атмосфере, играя ключевую роль в климатическом балансе планеты.</p>
+    `
+  },
+  {
+    id: 5,
+    title: "Архитектура Ренессанса",
+    category: "Искусство",
+    tags: ["архитектура", "Италия", "история искусства", "XVI век"],
+    icon: "🏛️",
+    body: `
+      <p>Архитектура эпохи Возрождения возникла в Италии в XV веке как осознанное возвращение к принципам античной Греции и Рима. Симметрия, пропорции и геометрия стали главными эстетическими ценностями.</p>
+      <h2>Принципы</h2>
+      <p>Ренессансные архитекторы опирались на трактат Витрувия «Об архитектуре» и разработали собственные теории пропорций. Брунеллески первым применил перспективу как инструмент проектирования.</p>
+      <h2>Выдающиеся постройки</h2>
+      <p>Купол Санта-Мария-дель-Фьоре (Брунеллески), базилика Сан-Лоренцо, палаццо Ручеллаи Альберти — всё это образцы флорентийского Ренессанса. Позднее Микеланджело продолжил традицию в Риме, создав проект купола собора Святого Петра.</p>
+      <h2>Распространение</h2>
+      <p>К концу XVI века стиль распространился по всей Европе, трансформируясь в каждой стране под влиянием местных традиций. Во Франции возник французский Ренессанс, в Англии — тюдоровский стиль.</p>
+    `
+  },
+  {
+    id: 6,
+    title: "Блокчейн",
+    category: "Информатика",
+    tags: ["криптовалюта", "децентрализация", "технологии", "Bitcoin"],
+    icon: "🔗",
+    body: `
+      <p>Блокчейн — распределённая база данных, в которой информация хранится в виде цепочки блоков. Каждый блок содержит набор транзакций и криптографическую ссылку на предыдущий блок.</p>
+      <h2>Принцип работы</h2>
+      <p>Новая транзакция рассылается всем участникам сети. Узлы проверяют её валидность и включают в новый блок. Блок добавляется в цепочку только после достижения консенсуса — большинство участников должны его одобрить.</p>
+      <h2>Типы блокчейна</h2>
+      <p>Публичные блокчейны открыты для всех (Bitcoin, Ethereum). Приватные — для авторизованных участников. Консорциумные управляются группой организаций. Каждый тип имеет свои компромиссы между открытостью и производительностью.</p>
+      <h2>Применение</h2>
+      <p>Помимо криптовалют, блокчейн используется для смарт-контрактов, токенизации активов, прозрачного голосования, цепочек поставок и хранения медицинских данных.</p>
+    `
+  }
+];
+
+/* ─── helpers ─── */
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function highlightText(text, query) {
+  if (!query) return text;
+  const re = new RegExp(`(${escapeRe(query)})`, 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+function stripTags(html) {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function getSnippet(text, query, len = 160) {
+  const plain = stripTags(text);
+  const idx = plain.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return plain.slice(0, len) + '…';
+  const start = Math.max(0, idx - 40);
+  const end = Math.min(plain.length, start + len);
+  return (start > 0 ? '…' : '') + plain.slice(start, end) + (end < plain.length ? '…' : '');
+}
+
+/* ─── views ─── */
+function showHome() {
+  document.getElementById('homeView').classList.remove('hidden');
+  document.getElementById('searchResultsView').classList.remove('visible');
+  document.getElementById('articleView').innerHTML = '';
+  document.querySelectorAll('.article-card').forEach(el => el.remove());
+  closeDropdown();
+  document.getElementById('searchInput').value = '';
+  updateSidebarActive(null);
+}
+
+function showArticle(id) {
+  const art = articles.find(a => a.id === id);
+  if (!art) return;
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('searchResultsView').classList.remove('visible');
+  const view = document.getElementById('articleView');
+  view.innerHTML = `
+    <div class="article-card visible">
+      <div class="article-header">
+        <div class="article-category">${art.category}</div>
+        <div class="article-title">${art.title}</div>
+        <div class="article-tags">${art.tags.map(t => `<span class="article-tag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="article-body">${art.body}</div>
+    </div>`;
+  updateSidebarActive(id);
+  closeDropdown();
+}
+
+function showArticleWithHighlight(id, query) {
+  const art = articles.find(a => a.id === id);
+  if (!art) return;
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('searchResultsView').classList.remove('visible');
+  const highlighted = highlightText(art.body, query);
+  const view = document.getElementById('articleView');
+  view.innerHTML = `
+    <div class="article-card visible">
+      <div class="article-header">
+        <div class="article-category">${art.category}</div>
+        <div class="article-title">${art.title}</div>
+        <div class="article-tags">${art.tags.map(t => `<span class="article-tag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="article-body">${highlighted}</div>
+    </div>`;
+  updateSidebarActive(id);
+  closeDropdown();
+}
+
+function updateSidebarActive(id) {
+  document.querySelectorAll('.sidebar-articles a').forEach(a => {
+    a.classList.toggle('active', parseInt(a.dataset.id) === id);
+  });
+}
+
+/* ─── sidebar render ─── */
+function renderSidebar() {
+  const list = document.getElementById('sidebarList');
+  list.innerHTML = articles.map(a => `
+    <li><a data-id="${a.id}" onclick="showArticle(${a.id})">${a.icon} ${a.title}</a></li>`).join('');
+
+  const allTags = [...new Set(articles.flatMap(a => a.tags))];
+  document.getElementById('sidebarTags').innerHTML = allTags.map(t =>
+    `<span class="tag" onclick="searchByTag('${t}')">${t}</span>`).join('');
+}
+
+/* ─── home grid ─── */
+function renderGrid() {
+  document.getElementById('articlesGrid').innerHTML = articles.map(a => `
+    <div class="grid-card" onclick="showArticle(${a.id})">
+      <div class="gc-category">${a.icon} ${a.category}</div>
+      <div class="gc-title">${a.title}</div>
+      <div class="gc-excerpt">${stripTags(a.body)}</div>
+    </div>`).join('');
+}
+
+/* ─── DROPDOWN live search ─── */
+const dropdown = document.getElementById('searchDropdown');
+
+function openDropdown() { dropdown.classList.add('open'); }
+function closeDropdown() { dropdown.classList.remove('open'); }
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.trim();
+  if (!q) { closeDropdown(); return; }
+  renderDropdown(q);
+  openDropdown();
+});
+
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { runFullSearch(); closeDropdown(); }
+  if (e.key === 'Escape') closeDropdown();
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap')) closeDropdown();
+});
+
+function renderDropdown(q) {
+  const ql = q.toLowerCase();
+
+  /* keyword matches (title or tags contain q) */
+  const keywordMatches = articles.filter(a =>
+    a.title.toLowerCase().includes(ql) ||
+    a.tags.some(t => t.toLowerCase().includes(ql)) ||
+    a.category.toLowerCase().includes(ql)
+  );
+
+  /* text matches (body contains q, not already in keyword list) */
+  const keyIds = new Set(keywordMatches.map(a => a.id));
+  const textMatches = articles.filter(a =>
+    !keyIds.has(a.id) && stripTags(a.body).toLowerCase().includes(ql)
+  );
+
+  if (!keywordMatches.length && !textMatches.length) {
+    dropdown.innerHTML = `<div class="no-results">Ничего не найдено по «${q}»</div>`;
+    return;
+  }
+
+  let html = '';
+
+  if (keywordMatches.length) {
+    html += `<div class="dropdown-section-label">По заголовку / тегам (${keywordMatches.length})</div>`;
+    html += keywordMatches.map(a => `
+      <div class="dropdown-item keyword-match" onclick="showArticle(${a.id})">
+        <div class="di-icon">${a.icon}</div>
+        <div class="di-body">
+          <div class="di-title">${highlightText(a.title, q)}</div>
+          <div class="di-meta">${a.category} · ${a.tags.join(', ')}</div>
+        </div>
+        <div class="di-badge">ключевые слова</div>
+      </div>`).join('');
+  }
+
+  if (textMatches.length) {
+    if (keywordMatches.length) html += `<div class="dropdown-divider"></div>`;
+    html += `<div class="dropdown-section-label">В тексте статей (${textMatches.length})</div>`;
+    html += textMatches.map(a => {
+      const snippet = highlightText(getSnippet(a.body, q), q);
+      return `
+        <div class="dropdown-item" onclick="showArticleWithHighlight(${a.id},'${q.replace(/'/g,"\\'")}')">
+          <div class="di-icon">${a.icon}</div>
+          <div class="di-body">
+            <div class="di-title">${a.title}</div>
+            <div class="di-snippet">${snippet}</div>
+          </div>
+          <div class="di-badge in-text">в тексте</div>
+        </div>`;
+    }).join('');
+  }
+
+  dropdown.innerHTML = html;
+}
+
+/* ─── FULL SEARCH PAGE ─── */
+function runFullSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  closeDropdown();
+  const ql = q.toLowerCase();
+
+  const keywordMatches = articles.filter(a =>
+    a.title.toLowerCase().includes(ql) ||
+    a.tags.some(t => t.toLowerCase().includes(ql)) ||
+    a.category.toLowerCase().includes(ql)
+  );
+  const keyIds = new Set(keywordMatches.map(a => a.id));
+  const textMatches = articles.filter(a =>
+    !keyIds.has(a.id) && stripTags(a.body).toLowerCase().includes(ql)
+  );
+
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('articleView').innerHTML = '';
+  const sv = document.getElementById('searchResultsView');
+  sv.classList.add('visible');
+
+  document.getElementById('resultsTitle').textContent = `Результаты: «${q}»`;
+  const total = keywordMatches.length + textMatches.length;
+  document.getElementById('resultsSubtitle').textContent =
+    total ? `Найдено ${total} статей` : 'Ничего не найдено';
+
+  let html = '';
+
+  if (keywordMatches.length) {
+    html += `<div class="result-group-title">По заголовку и тегам — ${keywordMatches.length}</div>`;
+    html += keywordMatches.map(a => `
+      <div class="result-item" onclick="showArticle(${a.id})">
+        <div class="ri-title">${a.icon} ${highlightText(a.title, q)}</div>
+        <div class="ri-meta">${a.category} · ${a.tags.join(' · ')}</div>
+        <div class="ri-snippet">${highlightText(stripTags(a.body).slice(0, 200), q)}…</div>
+      </div>`).join('');
+  }
+
+  if (textMatches.length) {
+    html += `<div class="result-group-title">В тексте статей — ${textMatches.length}</div>`;
+    html += textMatches.map(a => {
+      const snippet = getSnippet(a.body, q, 260);
+      return `
+        <div class="result-item" onclick="showArticleWithHighlight(${a.id},'${q.replace(/'/g,"\\'")}')">
+          <div class="ri-title">${a.icon} ${a.title}</div>
+          <div class="ri-meta">${a.category} · ${a.tags.join(' · ')}</div>
+          <div class="ri-snippet">${highlightText(snippet, q)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  if (!total) {
+    html = `<div class="no-results" style="padding:2rem 0;font-size:15px;color:var(--text-muted)">
+      Попробуйте другой запрос
+    </div>`;
+  }
+
+  document.getElementById('resultsBody').innerHTML = html;
+  updateSidebarActive(null);
+}
+
+function searchByTag(tag) {
+  document.getElementById('searchInput').value = tag;
+  runFullSearch();
+}
+
+/* ─── INIT ─── */
+renderSidebar();
+renderGrid();
+</script>
+</body>
+</html>
