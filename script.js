@@ -566,9 +566,8 @@ function openEditArticleModal(articleId) {
     addArticleModal.classList.remove('hidden');
 }
 
-// Обновленная обработка формы (добавление или редактирование)
-addArticleForm.removeEventListener('submit', addArticleForm._submitHandler);
-addArticleForm._submitHandler = async (e) => {
+// Обработка формы добавления/редактирования статьи
+addArticleForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const title = document.getElementById('articleTitle').value.trim();
@@ -632,13 +631,12 @@ addArticleForm._submitHandler = async (e) => {
 
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('❌ Ошибка при сохранении темы');
+        alert('❌ Ошибка при сохранении темы: ' + error.message);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
-};
-addArticleForm.addEventListener('submit', addArticleForm._submitHandler);
+});
 
 // Удалить статью
 async function deleteArticle(articleId) {
