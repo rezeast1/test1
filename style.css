@@ -453,6 +453,43 @@ article .article-body p {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    flex: 1;
+}
+
+.article-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.article-admin-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.edit-article-btn,
+.delete-article-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+    border: 2px solid #e5e7eb;
+}
+
+.edit-article-btn:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    transform: scale(1.1);
+}
+
+.delete-article-btn:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    transform: scale(1.1);
 }
 
 .article-title {
@@ -527,6 +564,16 @@ article .article-body p {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+
+    .article-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .article-admin-controls {
+        width: 100%;
+        justify-content: flex-end;
     }
 }
 

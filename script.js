@@ -37,24 +37,9 @@ function loadViews() {
     useFirebase = initFirebase();
 
     if (useFirebase) {
-        // Загружаем просмотры из Firebase
-        getViewsFromFirebase((views) => {
-            articles.forEach(article => {
-                if (views[article.id] !== undefined) {
-                    article.views = views[article.id];
-                }
-            });
+        // Загружаем статьи и просмотры из Firebase
+        loadArticlesFromFirebase(() => {
             displayAllArticles();
-
-            // Подписываемся на обновления в реальном времени
-            subscribeToViewsUpdates((views) => {
-                articles.forEach(article => {
-                    if (views[article.id] !== undefined) {
-                        article.views = views[article.id];
-                    }
-                });
-                displayAllArticles();
-            });
         });
     } else {
         // Fallback на localStorage если Firebase не настроен
@@ -70,6 +55,66 @@ function loadViews() {
         }
         displayAllArticles();
     }
+}
+
+// Загрузить статьи из Firebase
+function loadArticlesFromFirebase(callback) {
+    if (!database) {
+        console.error('Firebase не инициализирован');
+        return;
+    }
+
+    const articlesRef = database.ref('articles');
+    articlesRef.once('value', (snapshot) => {
+        const firebaseArticles = snapshot.val();
+
+        if (firebaseArticles) {
+            // Объединяем статьи из data.js и Firebase
+            const firebaseIds = Object.keys(firebaseArticles).map(id => parseInt(id));
+
+            // Обновляем существующие статьи
+            articles.forEach(article => {
+                if (firebaseArticles[article.id]) {
+                    Object.assign(article, firebaseArticles[article.id]);
+                }
+            });
+
+            // Добавляем новые статьи из Firebase
+            firebaseIds.forEach(id => {
+                if (!articles.find(a => a.id === id)) {
+                    articles.push({
+                        id: id,
+                        ...firebaseArticles[id]
+                    });
+                }
+            });
+        }
+
+        // Подписываемся на обновления статей в реальном времени
+        articlesRef.on('value', (snapshot) => {
+            const firebaseArticles = snapshot.val();
+            if (firebaseArticles) {
+                // Обновляем статьи
+                Object.keys(firebaseArticles).forEach(id => {
+                    const articleId = parseInt(id);
+                    const existingArticle = articles.find(a => a.id === articleId);
+
+                    if (existingArticle) {
+                        Object.assign(existingArticle, firebaseArticles[id]);
+                    } else {
+                        articles.push({
+                            id: articleId,
+                            ...firebaseArticles[id]
+                        });
+                    }
+                });
+
+                displayAllArticles();
+            }
+        });
+
+        callback();
+    });
 }
 
 function saveViews() {
@@ -274,14 +319,23 @@ function displayAllArticles() {
     let html = '';
     sortedArticles.forEach(article => {
         html += `
-            <a href="#" class="article-link" data-id="${article.id}">
-                <span class="article-title">${article.title}</span>
-                <span class="article-views">👁 ${article.views}</span>
-            </a>
+            <div class="article-item">
+                <a href="#" class="article-link" data-id="${article.id}">
+                    <span class="article-title">${article.title}</span>
+                    <span class="article-views">👁 ${article.views}</span>
+                </a>
+                ${isAdmin ? `
+                    <div class="article-admin-controls">
+                        <button class="edit-article-btn" data-id="${article.id}" title="Редактировать">✏️</button>
+                        <button class="delete-article-btn" data-id="${article.id}" title="Удалить">🗑️</button>
+                    </div>
+                ` : ''}
+            </div>
         `;
     });
     articlesList.innerHTML = html;
 
+    // Обработчики для ссылок на статьи
     document.querySelectorAll('.article-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -289,6 +343,25 @@ function displayAllArticles() {
             showArticle(articleId);
         });
     });
+
+    // Обработчики для кнопок редактирования (только для админа)
+    if (isAdmin) {
+        document.querySelectorAll('.edit-article-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const articleId = parseInt(btn.dataset.id);
+                openEditArticleModal(articleId);
+            });
+        });
+
+        document.querySelectorAll('.delete-article-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const articleId = parseInt(btn.dataset.id);
+                deleteArticle(articleId);
+            });
+        });
+    }
 }
 
 searchBtn.addEventListener('click', () => {
@@ -380,11 +453,19 @@ addArticleBtn.addEventListener('click', () => {
 closeAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    editingArticleId = null;
+    // Восстанавливаем заголовок и кнопку
+    document.querySelector('#addArticleModal h2').textContent = 'Добавить новую тему';
+    document.querySelector('#addArticleModal .submit-btn').textContent = 'Добавить тему';
 });
 
 cancelAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    editingArticleId = null;
+    // Восстанавливаем заголовок и кнопку
+    document.querySelector('#addArticleModal h2').textContent = 'Добавить новую тему';
+    document.querySelector('#addArticleModal .submit-btn').textContent = 'Добавить тему';
 });
 
 // Обработка добавления новой темы
@@ -415,27 +496,164 @@ addArticleForm.addEventListener('submit', async (e) => {
         views: 0
     };
 
-    // Добавляем в массив
-    articles.push(newArticle);
+    // Блокируем кнопку
+    const submitBtn = addArticleForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Добавление...';
 
-    // Сохраняем в Firebase
-    if (useFirebase) {
-        try {
+    try {
+        // Добавляем в массив
+        articles.push(newArticle);
+
+        // Сохраняем в Firebase
+        if (useFirebase) {
             await saveArticleToFirebase(newArticle);
-        } catch (error) {
-            console.error('Ошибка сохранения в Firebase:', error);
         }
+
+        // Обновляем отображение
+        displayAllArticles();
+
+        // Закрываем модальное окно
+        addArticleModal.classList.add('hidden');
+        addArticleForm.reset();
+
+        alert('✅ Тема успешно добавлена!');
+    } catch (error) {
+        console.error('Ошибка добавления темы:', error);
+        alert('❌ Ошибка при добавлении темы');
+        // Удаляем из массива если не удалось сохранить
+        const index = articles.findIndex(a => a.id === newId);
+        if (index > -1) articles.splice(index, 1);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Открыть модальное окно редактирования
+let editingArticleId = null;
+
+function openEditArticleModal(articleId) {
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    editingArticleId = articleId;
+
+    // Заполняем форму данными статьи
+    document.getElementById('articleTitle').value = article.title;
+    document.getElementById('articleKeywords').value = article.keywords.join(', ');
+    document.getElementById('articleContent').value = article.content;
+
+    // Меняем заголовок и текст кнопки
+    document.querySelector('#addArticleModal h2').textContent = 'Редактировать тему';
+    document.querySelector('#addArticleModal .submit-btn').textContent = 'Сохранить изменения';
+
+    addArticleModal.classList.remove('hidden');
+}
+
+// Обновленная обработка формы (добавление или редактирование)
+addArticleForm.removeEventListener('submit', addArticleForm._submitHandler);
+addArticleForm._submitHandler = async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('articleTitle').value.trim();
+    const keywordsStr = document.getElementById('articleKeywords').value.trim();
+    const content = document.getElementById('articleContent').value.trim();
+
+    if (!title || !keywordsStr || !content) {
+        alert('Пожалуйста, заполните все обязательные поля');
+        return;
     }
 
-    // Обновляем отображение
-    displayAllArticles();
+    const keywords = keywordsStr.split(',').map(k => k.trim()).filter(k => k);
+    const submitBtn = addArticleForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = editingArticleId ? 'Сохранение...' : 'Добавление...';
 
-    // Закрываем модальное окно
-    addArticleModal.classList.add('hidden');
-    addArticleForm.reset();
+    try {
+        if (editingArticleId) {
+            // Редактирование существующей статьи
+            const article = articles.find(a => a.id === editingArticleId);
+            if (article) {
+                article.title = title;
+                article.keywords = keywords;
+                article.content = content;
 
-    alert('✅ Тема успешно добавлена!');
-});
+                if (useFirebase) {
+                    await saveArticleToFirebase(article);
+                }
+
+                alert('✅ Тема успешно обновлена!');
+            }
+        } else {
+            // Добавление новой статьи
+            const newId = articles.length > 0 ? Math.max(...articles.map(a => a.id)) + 1 : 1;
+            const newArticle = {
+                id: newId,
+                title: title,
+                keywords: keywords,
+                content: content,
+                views: 0
+            };
+
+            articles.push(newArticle);
+
+            if (useFirebase) {
+                await saveArticleToFirebase(newArticle);
+            }
+
+            alert('✅ Тема успешно добавлена!');
+        }
+
+        displayAllArticles();
+        addArticleModal.classList.add('hidden');
+        addArticleForm.reset();
+        editingArticleId = null;
+
+        // Восстанавливаем заголовок и кнопку
+        document.querySelector('#addArticleModal h2').textContent = 'Добавить новую тему';
+        document.querySelector('#addArticleModal .submit-btn').textContent = 'Добавить тему';
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('❌ Ошибка при сохранении темы');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+};
+addArticleForm.addEventListener('submit', addArticleForm._submitHandler);
+
+// Удалить статью
+async function deleteArticle(articleId) {
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    if (!confirm(`Вы уверены, что хотите удалить тему "${article.title}"?`)) {
+        return;
+    }
+
+    try {
+        // Удаляем из массива
+        const index = articles.findIndex(a => a.id === articleId);
+        if (index > -1) {
+            articles.splice(index, 1);
+        }
+
+        // Удаляем из Firebase
+        if (useFirebase) {
+            await deleteArticleFromFirebase(articleId);
+        }
+
+        displayAllArticles();
+        alert('✅ Тема успешно удалена!');
+    } catch (error) {
+        console.error('Ошибка удаления темы:', error);
+        alert('❌ Ошибка при удалении темы');
+    }
+}
 
 // Сохранить статью в Firebase
 async function saveArticleToFirebase(article) {
@@ -449,8 +667,19 @@ async function saveArticleToFirebase(article) {
         title: article.title,
         keywords: article.keywords,
         content: article.content,
-        views: article.views
+        views: article.views || 0
     });
+}
+
+// Удалить статью из Firebase
+async function deleteArticleFromFirebase(articleId) {
+    if (!database) {
+        console.log('Firebase не инициализирован');
+        return;
+    }
+
+    const articlesRef = database.ref('articles/' + articleId);
+    await articlesRef.remove();
 }
 
 // Модальное окно для предложения темы
