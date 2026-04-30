@@ -571,9 +571,19 @@ function openEditArticleModal(articleId) {
 addArticleForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const title = document.getElementById('articleTitle').value.trim();
-    const keywordsStr = document.getElementById('articleKeywords').value.trim();
-    const content = document.getElementById('articleContent').value.trim();
+    const titleInput = document.getElementById('articleTitle');
+    const keywordsInput = document.getElementById('articleKeywords');
+    const contentInput = document.getElementById('articleContent');
+
+    if (!titleInput || !keywordsInput || !contentInput) {
+        console.error('Не найдены поля формы');
+        alert('❌ Ошибка: не найдены поля формы');
+        return;
+    }
+
+    const title = titleInput.value.trim();
+    const keywordsStr = keywordsInput.value.trim();
+    const content = contentInput.value.trim();
 
     if (!title || !keywordsStr || !content) {
         alert('Пожалуйста, заполните все обязательные поля');
@@ -652,7 +662,7 @@ addArticleForm.addEventListener('submit', async (e) => {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
-}, {once: false});
+});
 
 // Удалить статью
 async function deleteArticle(articleId) {
