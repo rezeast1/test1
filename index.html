@@ -15,6 +15,7 @@
         <header>
             <h1>📚 Вики</h1>
             <p class="subtitle">База знаний</p>
+            <button id="adminLoginBtn" class="admin-login-btn">Вход для админа</button>
         </header>
 
         <div class="search-box">
@@ -33,6 +34,7 @@
             <div class="articles-header">
                 <h2>Все статьи</h2>
                 <div class="header-buttons">
+                    <button id="addArticleBtn" class="add-article-btn hidden">Добавить тему</button>
                     <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
                     <button id="resetViewsBtn" class="reset-btn">Сбросить просмотры</button>
                 </div>
@@ -65,6 +67,54 @@
                     <div class="form-actions">
                         <button type="submit" class="submit-btn">Отправить предложение</button>
                         <button type="button" class="cancel-btn" id="cancelSuggest">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно для входа админа -->
+        <div id="adminLoginModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeAdminLogin">&times;</span>
+                <h2>Вход для администратора</h2>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Логин</label>
+                        <input type="text" id="adminUsername" placeholder="admin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Пароль</label>
+                        <input type="password" id="adminPassword" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Войти</button>
+                        <button type="button" class="cancel-btn" id="cancelAdminLogin">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно для добавления темы (только для админа) -->
+        <div id="addArticleModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeAddArticle">&times;</span>
+                <h2>Добавить новую тему</h2>
+                <form id="addArticleForm">
+                    <div class="form-group">
+                        <label for="articleTitle">Название темы *</label>
+                        <input type="text" id="articleTitle" placeholder="Например: TypeScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleKeywords">Ключевые слова (через запятую) *</label>
+                        <input type="text" id="articleKeywords" placeholder="программирование, типизация, JavaScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleContent">Содержание темы *</label>
+                        <textarea id="articleContent" rows="12" placeholder="Подробное описание темы..." required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Добавить тему</button>
+                        <button type="button" class="cancel-btn" id="cancelAddArticle">Отмена</button>
                     </div>
                 </form>
             </div>

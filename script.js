@@ -8,6 +8,28 @@ const allArticlesContainer = document.getElementById('allArticles');
 const articlesList = document.getElementById('articlesList');
 
 let useFirebase = false;
+let isAdmin = false;
+
+// Проверка авторизации админа при загрузке
+function checkAdminAuth() {
+    const adminAuth = localStorage.getItem('adminAuth');
+    if (adminAuth === 'true') {
+        isAdmin = true;
+        showAdminControls();
+    }
+}
+
+// Показать элементы управления для админа
+function showAdminControls() {
+    document.getElementById('addArticleBtn').classList.remove('hidden');
+    document.getElementById('adminLoginBtn').textContent = 'Выйти';
+}
+
+// Скрыть элементы управления админа
+function hideAdminControls() {
+    document.getElementById('addArticleBtn').classList.add('hidden');
+    document.getElementById('adminLoginBtn').textContent = 'Вход для админа';
+}
 
 // Система подсчета просмотров с поддержкой Firebase
 function loadViews() {
@@ -290,6 +312,147 @@ searchInput.addEventListener('input', () => {
 
 backBtn.addEventListener('click', hideArticle);
 
+// Авторизация админа
+const adminLoginModal = document.getElementById('adminLoginModal');
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+const closeAdminLogin = document.getElementById('closeAdminLogin');
+const cancelAdminLogin = document.getElementById('cancelAdminLogin');
+const adminLoginForm = document.getElementById('adminLoginForm');
+
+// Открыть/закрыть модальное окно входа
+adminLoginBtn.addEventListener('click', () => {
+    if (isAdmin) {
+        // Выход
+        if (confirm('Выйти из режима администратора?')) {
+            isAdmin = false;
+            localStorage.removeItem('adminAuth');
+            hideAdminControls();
+            alert('Вы вышли из режима администратора');
+        }
+    } else {
+        // Вход
+        adminLoginModal.classList.remove('hidden');
+    }
+});
+
+closeAdminLogin.addEventListener('click', () => {
+    adminLoginModal.classList.add('hidden');
+    adminLoginForm.reset();
+});
+
+cancelAdminLogin.addEventListener('click', () => {
+    adminLoginModal.classList.add('hidden');
+    adminLoginForm.reset();
+});
+
+// Обработка входа админа
+adminLoginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById('adminUsername').value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
+
+    // Простая проверка (в продакшене используйте Firebase Auth или backend)
+    if (username === 'admin' && password === 'admin123') {
+        isAdmin = true;
+        localStorage.setItem('adminAuth', 'true');
+        showAdminControls();
+        adminLoginModal.classList.add('hidden');
+        adminLoginForm.reset();
+        alert('✅ Вы вошли как администратор');
+    } else {
+        alert('❌ Неверный логин или пароль');
+    }
+});
+
+// Модальное окно добавления темы
+const addArticleModal = document.getElementById('addArticleModal');
+const addArticleBtn = document.getElementById('addArticleBtn');
+const closeAddArticle = document.getElementById('closeAddArticle');
+const cancelAddArticle = document.getElementById('cancelAddArticle');
+const addArticleForm = document.getElementById('addArticleForm');
+
+// Открыть модальное окно добавления темы
+addArticleBtn.addEventListener('click', () => {
+    addArticleModal.classList.remove('hidden');
+});
+
+closeAddArticle.addEventListener('click', () => {
+    addArticleModal.classList.add('hidden');
+    addArticleForm.reset();
+});
+
+cancelAddArticle.addEventListener('click', () => {
+    addArticleModal.classList.add('hidden');
+    addArticleForm.reset();
+});
+
+// Обработка добавления новой темы
+addArticleForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('articleTitle').value.trim();
+    const keywordsStr = document.getElementById('articleKeywords').value.trim();
+    const content = document.getElementById('articleContent').value.trim();
+
+    if (!title || !keywordsStr || !content) {
+        alert('Пожалуйста, заполните все обязательные поля');
+        return;
+    }
+
+    // Преобразуем ключевые слова в массив
+    const keywords = keywordsStr.split(',').map(k => k.trim()).filter(k => k);
+
+    // Генерируем новый ID
+    const newId = articles.length > 0 ? Math.max(...articles.map(a => a.id)) + 1 : 1;
+
+    // Создаем новую статью
+    const newArticle = {
+        id: newId,
+        title: title,
+        keywords: keywords,
+        content: content,
+        views: 0
+    };
+
+    // Добавляем в массив
+    articles.push(newArticle);
+
+    // Сохраняем в Firebase
+    if (useFirebase) {
+        try {
+            await saveArticleToFirebase(newArticle);
+        } catch (error) {
+            console.error('Ошибка сохранения в Firebase:', error);
+        }
+    }
+
+    // Обновляем отображение
+    displayAllArticles();
+
+    // Закрываем модальное окно
+    addArticleModal.classList.add('hidden');
+    addArticleForm.reset();
+
+    alert('✅ Тема успешно добавлена!');
+});
+
+// Сохранить статью в Firebase
+async function saveArticleToFirebase(article) {
+    if (!database) {
+        console.log('Firebase не инициализирован');
+        return;
+    }
+
+    const articlesRef = database.ref('articles/' + article.id);
+    await articlesRef.set({
+        title: article.title,
+        keywords: article.keywords,
+        content: article.content,
+        views: article.views
+    });
+}
+
 // Модальное окно для предложения темы
 const suggestModal = document.getElementById('suggestModal');
 const suggestBtn = document.getElementById('suggestBtn');
@@ -364,6 +527,9 @@ suggestForm.addEventListener('submit', async (e) => {
 
 // Обработчик кнопки сброса просмотров
 document.getElementById('resetViewsBtn').addEventListener('click', resetAllViews);
+
+// Проверяем авторизацию админа при загрузке
+checkAdminAuth();
 
 // Загружаем просмотры при старте
 loadViews();
