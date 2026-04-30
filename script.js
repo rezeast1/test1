@@ -991,7 +991,7 @@ window.resetViews = resetAllViews;
 // ===== РАБОТА С МЕДИА ФАЙЛАМИ =====
 
 // ImgBB API Key (бесплатный, получить на https://api.imgbb.com/)
-const IMGBB_API_KEY = 'b3f1c8e5c8f8c8e5c8f8c8e5c8f8c8e5'; // Замените на свой ключ
+const IMGBB_API_KEY = '71077e7395b6b7ae7fe585a7434247ed';
 
 // Загрузить изображение на ImgBB
 async function uploadImageToImgBB(file) {
