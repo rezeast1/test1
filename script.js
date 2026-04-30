@@ -495,7 +495,7 @@ function openEditArticleModal(articleId) {
     // Заполняем форму данными статьи
     document.getElementById('articleTitle').value = article.title;
     document.getElementById('articleKeywords').value = article.keywords.join(', ');
-    document.getElementById('articleContent').value = article.content;
+    document.getElementById('articleContentInput').value = article.content;
 
     // Меняем заголовок и текст кнопки
     document.querySelector('#addArticleModal h2').textContent = 'Редактировать тему';
@@ -510,7 +510,7 @@ addArticleForm.addEventListener('submit', async (e) => {
 
     const titleInput = document.getElementById('articleTitle');
     const keywordsInput = document.getElementById('articleKeywords');
-    const contentInput = document.getElementById('articleContent');
+    const contentInput = document.getElementById('articleContentInput');
 
     console.log('Form inputs:', { titleInput, keywordsInput, contentInput });
 
