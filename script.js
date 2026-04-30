@@ -149,7 +149,9 @@ function incrementViews(articleId) {
         article.views++;
 
         if (useFirebase) {
-            incrementViewInFirebase(articleId);
+            // Сохраняем обновленные просмотры в Firebase
+            const articleRef = database.ref('articles/' + articleId + '/views');
+            articleRef.set(article.views);
         } else {
             saveViews();
         }
@@ -158,22 +160,22 @@ function incrementViews(articleId) {
 
 function resetAllViews() {
     if (confirm('Вы уверены, что хотите сбросить все просмотры?')) {
+        articles.forEach(article => {
+            article.views = 0;
+        });
+
         if (useFirebase) {
-            resetViewsInFirebase(() => {
-                articles.forEach(article => {
-                    article.views = 0;
-                });
-                displayAllArticles();
-                alert('Все просмотры сброшены!');
+            // Сбрасываем просмотры в Firebase для каждой статьи
+            articles.forEach(article => {
+                const articleRef = database.ref('articles/' + article.id + '/views');
+                articleRef.set(0);
             });
         } else {
-            articles.forEach(article => {
-                article.views = 0;
-            });
             saveViews();
-            displayAllArticles();
-            alert('Все просмотры сброшены!');
         }
+
+        displayAllArticles();
+        alert('Все просмотры сброшены!');
     }
 }
 
