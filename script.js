@@ -483,69 +483,6 @@ cancelAddArticle.addEventListener('click', () => {
     document.querySelector('#addArticleModal .submit-btn').textContent = 'Добавить тему';
 });
 
-// Обработка добавления новой темы
-addArticleForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const title = document.getElementById('articleTitle').value.trim();
-    const keywordsStr = document.getElementById('articleKeywords').value.trim();
-    const content = document.getElementById('articleContent').value.trim();
-
-    if (!title || !keywordsStr || !content) {
-        alert('Пожалуйста, заполните все обязательные поля');
-        return;
-    }
-
-    // Преобразуем ключевые слова в массив
-    const keywords = keywordsStr.split(',').map(k => k.trim()).filter(k => k);
-
-    // Генерируем новый ID
-    const newId = articles.length > 0 ? Math.max(...articles.map(a => a.id)) + 1 : 1;
-
-    // Создаем новую статью
-    const newArticle = {
-        id: newId,
-        title: title,
-        keywords: keywords,
-        content: content,
-        views: 0
-    };
-
-    // Блокируем кнопку
-    const submitBtn = addArticleForm.querySelector('.submit-btn');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Добавление...';
-
-    try {
-        // Добавляем в массив
-        articles.push(newArticle);
-
-        // Сохраняем в Firebase
-        if (useFirebase) {
-            await saveArticleToFirebase(newArticle);
-        }
-
-        // Обновляем отображение
-        displayAllArticles();
-
-        // Закрываем модальное окно
-        addArticleModal.classList.add('hidden');
-        addArticleForm.reset();
-
-        alert('✅ Тема успешно добавлена!');
-    } catch (error) {
-        console.error('Ошибка добавления темы:', error);
-        alert('❌ Ошибка при добавлении темы');
-        // Удаляем из массива если не удалось сохранить
-        const index = articles.findIndex(a => a.id === newId);
-        if (index > -1) articles.splice(index, 1);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
-});
-
 // Открыть модальное окно редактирования
 let editingArticleId = null;
 
