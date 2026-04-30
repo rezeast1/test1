@@ -389,6 +389,26 @@ function showArticle(id) {
         p.trim() ? `<p>${p.trim()}</p>` : ''
     ).join('');
 
+    // Формируем HTML для изображений
+    let imagesHtml = '';
+    if (article.images && article.images.length > 0) {
+        imagesHtml = '<div class="article-media">';
+        article.images.forEach(imageUrl => {
+            imagesHtml += `<img src="${imageUrl}" alt="${article.title}" loading="lazy">`;
+        });
+        imagesHtml += '</div>';
+    }
+
+    // Формируем HTML для видео
+    let videosHtml = '';
+    if (article.videos && article.videos.length > 0) {
+        videosHtml = '<div class="article-media">';
+        article.videos.forEach(videoUrl => {
+            videosHtml += `<video src="${videoUrl}" controls preload="metadata"></video>`;
+        });
+        videosHtml += '</div>';
+    }
+
     const totalRatings = (article.helpful || 0) + (article.notHelpful || 0);
     const helpfulPercent = totalRatings > 0 ? Math.round((article.helpful / totalRatings) * 100) : 0;
 
@@ -402,6 +422,8 @@ function showArticle(id) {
         <div class="article-body">
             ${contentHtml}
         </div>
+        ${imagesHtml}
+        ${videosHtml}
         <div class="article-feedback">
             <p class="feedback-question">Эта статья была полезна?</p>
             <div class="feedback-buttons">
@@ -578,6 +600,7 @@ addArticleBtn.addEventListener('click', () => {
 closeAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    clearMediaInputs();
     editingArticleId = null;
     // Восстанавливаем заголовок и кнопку
     document.querySelector('#addArticleModal h2').textContent = 'Добавить новую тему';
@@ -587,6 +610,7 @@ closeAddArticle.addEventListener('click', () => {
 cancelAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    clearMediaInputs();
     editingArticleId = null;
     // Восстанавливаем заголовок и кнопку
     document.querySelector('#addArticleModal h2').textContent = 'Добавить новую тему';
@@ -656,6 +680,16 @@ addArticleForm.addEventListener('submit', async (e) => {
                 article.keywords = keywords;
                 article.content = content;
 
+                // Загружаем медиа файлы
+                if (useFirebase && storage) {
+                    submitBtn.textContent = 'Загрузка медиа...';
+                    const media = await uploadArticleMedia(editingArticleId);
+
+                    // Добавляем новые медиа к существующим
+                    article.images = [...(article.images || []), ...media.images];
+                    article.videos = [...(article.videos || []), ...media.videos];
+                }
+
                 // Сохраняем в Firebase БЕЗ добавления в массив (уже там)
                 if (useFirebase) {
                     await saveArticleToFirebase(article);
@@ -674,8 +708,18 @@ addArticleForm.addEventListener('submit', async (e) => {
                 title: title,
                 keywords: keywords,
                 content: content,
-                views: 0
+                views: 0,
+                images: [],
+                videos: []
             };
+
+            // Загружаем медиа файлы
+            if (useFirebase && storage) {
+                submitBtn.textContent = 'Загрузка медиа...';
+                const media = await uploadArticleMedia(newId);
+                newArticle.images = media.images;
+                newArticle.videos = media.videos;
+            }
 
             // Добавляем в массив
             articles.push(newArticle);
@@ -694,6 +738,7 @@ addArticleForm.addEventListener('submit', async (e) => {
         // Закрываем модальное окно
         addArticleModal.classList.add('hidden');
         addArticleForm.reset();
+        clearMediaInputs();
         editingArticleId = null;
 
         // Восстанавливаем заголовок и кнопку
@@ -758,7 +803,9 @@ async function saveArticleToFirebase(article) {
         content: article.content,
         views: article.views || 0,
         helpful: article.helpful || 0,
-        notHelpful: article.notHelpful || 0
+        notHelpful: article.notHelpful || 0,
+        images: article.images || [],
+        videos: article.videos || []
     });
 }
 
@@ -856,3 +903,137 @@ loadViews();
 
 // Добавляем глобальную функцию для сброса просмотров (можно вызвать из консоли)
 window.resetViews = resetAllViews;
+
+// ===== РАБОТА С МЕДИА ФАЙЛАМИ =====
+
+// Хранилище для загруженных медиа (временное, до сохранения статьи)
+let uploadedImages = [];
+let uploadedVideos = [];
+
+// Превью выбранных изображений
+document.getElementById('articleImages')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const preview = document.getElementById('imagePreview');
+
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const div = document.createElement('div');
+                div.className = 'media-preview-item';
+                div.innerHTML = `
+                    <img src="${event.target.result}" alt="Preview">
+                    <button type="button" class="remove-media" onclick="removePreviewItem(this, 'image')">&times;</button>
+                `;
+                div.dataset.file = file.name;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+// Превью выбранных видео
+document.getElementById('articleVideos')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const preview = document.getElementById('videoPreview');
+
+    files.forEach(file => {
+        if (file.type.startsWith('video/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const div = document.createElement('div');
+                div.className = 'media-preview-item';
+                div.innerHTML = `
+                    <video src="${event.target.result}" muted></video>
+                    <button type="button" class="remove-media" onclick="removePreviewItem(this, 'video')">&times;</button>
+                `;
+                div.dataset.file = file.name;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+// Удалить превью элемент
+function removePreviewItem(button, type) {
+    const item = button.parentElement;
+    const fileName = item.dataset.file;
+
+    // Удаляем из DOM
+    item.remove();
+
+    // Очищаем input если все превью удалены
+    const preview = type === 'image' ? document.getElementById('imagePreview') : document.getElementById('videoPreview');
+    if (preview.children.length === 0) {
+        const input = type === 'image' ? document.getElementById('articleImages') : document.getElementById('articleVideos');
+        input.value = '';
+    }
+}
+
+// Загрузить файл в Firebase Storage
+async function uploadFileToStorage(file, articleId, type) {
+    if (!storage) {
+        console.error('Firebase Storage не инициализирован');
+        return null;
+    }
+
+    try {
+        const timestamp = Date.now();
+        const fileName = `${articleId}_${timestamp}_${file.name}`;
+        const storageRef = storage.ref(`articles/${type}/${fileName}`);
+
+        // Загружаем файл
+        const snapshot = await storageRef.put(file);
+
+        // Получаем URL загруженного файла
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        return downloadURL;
+    } catch (error) {
+        console.error('Ошибка загрузки файла:', error);
+        throw error;
+    }
+}
+
+// Загрузить все медиа файлы для статьи
+async function uploadArticleMedia(articleId) {
+    const imageFiles = document.getElementById('articleImages')?.files || [];
+    const videoFiles = document.getElementById('articleVideos')?.files || [];
+
+    const imageUrls = [];
+    const videoUrls = [];
+
+    // Загружаем изображения
+    for (let file of imageFiles) {
+        try {
+            const url = await uploadFileToStorage(file, articleId, 'images');
+            if (url) imageUrls.push(url);
+        } catch (error) {
+            console.error('Ошибка загрузки изображения:', error);
+        }
+    }
+
+    // Загружаем видео
+    for (let file of videoFiles) {
+        try {
+            const url = await uploadFileToStorage(file, articleId, 'videos');
+            if (url) videoUrls.push(url);
+        } catch (error) {
+            console.error('Ошибка загрузки видео:', error);
+        }
+    }
+
+    return { images: imageUrls, videos: videoUrls };
+}
+
+// Очистить превью и inputs медиа
+function clearMediaInputs() {
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('videoPreview').innerHTML = '';
+    document.getElementById('articleImages').value = '';
+    document.getElementById('articleVideos').value = '';
+    uploadedImages = [];
+    uploadedVideos = [];
+}

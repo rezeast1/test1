@@ -851,3 +851,81 @@ article .article-body p {
         padding: 6px 12px;
     }
 }
+
+/* Медиа превью и отображение */
+.media-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.media-preview-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.media-preview-item img,
+.media-preview-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.media-preview-item .remove-media {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.3s ease;
+}
+
+.media-preview-item .remove-media:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.article-media {
+    margin: 20px 0;
+}
+
+.article-media img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 10px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.article-media video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 10px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+input[type="file"] {
+    padding: 10px;
+    border: 2px dashed #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+input[type="file"]:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
