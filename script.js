@@ -9,6 +9,75 @@ const articlesList = document.getElementById('articlesList');
 
 let useFirebase = false;
 let isAdmin = false;
+let quill = null;
+
+// Инициализация Quill редактора
+function initQuillEditor() {
+    if (typeof Quill === 'undefined') {
+        console.error('Quill не загружен');
+        return;
+    }
+
+    quill = new Quill('#editor', {
+        theme: 'snow',
+        placeholder: 'Напишите содержание статьи...',
+        modules: {
+            toolbar: {
+                container: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ],
+                handlers: {
+                    image: imageHandler
+                }
+            }
+        }
+    });
+
+    // Синхронизируем содержимое с hidden input
+    quill.on('text-change', function() {
+        const html = quill.root.innerHTML;
+        document.getElementById('articleContentInput').value = html;
+    });
+}
+
+// Обработчик кнопки "Изображение" в Quill
+function imageHandler() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        // Показываем индикатор загрузки
+        const range = quill.getSelection(true);
+        quill.insertText(range.index, 'Загрузка изображения...');
+        quill.setSelection(range.index + 23);
+
+        try {
+            // Загружаем на ImgBB
+            const imageUrl = await uploadImageToImgBB(file);
+
+            // Удаляем текст "Загрузка..."
+            quill.deleteText(range.index, 23);
+
+            // Вставляем изображение
+            quill.insertEmbed(range.index, 'image', imageUrl);
+            quill.setSelection(range.index + 1);
+        } catch (error) {
+            // Удаляем текст "Загрузка..." при ошибке
+            quill.deleteText(range.index, 23);
+            alert('❌ Ошибка загрузки изображения. Попробуйте еще раз.');
+        }
+    };
+}
 
 // Проверка авторизации админа при загрузке
 function checkAdminAuth() {
@@ -385,9 +454,8 @@ function showArticle(id) {
     // Увеличиваем счетчик просмотров
     incrementViews(id);
 
-    const contentHtml = article.content.split('\n').map(p =>
-        p.trim() ? `<p>${p.trim()}</p>` : ''
-    ).join('');
+    // Контент уже в HTML формате из Quill, просто выводим его
+    const contentHtml = article.content;
 
     // Формируем HTML для изображений
     let imagesHtml = '';
@@ -595,11 +663,16 @@ const addArticleForm = document.getElementById('addArticleForm');
 // Открыть модальное окно добавления темы
 addArticleBtn.addEventListener('click', () => {
     addArticleModal.classList.remove('hidden');
+    // Инициализируем Quill если еще не инициализирован
+    if (!quill) {
+        initQuillEditor();
+    }
 });
 
 closeAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    if (quill) quill.setText('');
     clearMediaInputs();
     editingArticleId = null;
     // Восстанавливаем заголовок и кнопку
@@ -610,6 +683,7 @@ closeAddArticle.addEventListener('click', () => {
 cancelAddArticle.addEventListener('click', () => {
     addArticleModal.classList.add('hidden');
     addArticleForm.reset();
+    if (quill) quill.setText('');
     clearMediaInputs();
     editingArticleId = null;
     // Восстанавливаем заголовок и кнопку
@@ -626,10 +700,20 @@ function openEditArticleModal(articleId) {
 
     editingArticleId = articleId;
 
+    // Инициализируем Quill если еще не инициализирован
+    if (!quill) {
+        initQuillEditor();
+    }
+
     // Заполняем форму данными статьи
     document.getElementById('articleTitle').value = article.title;
     document.getElementById('articleKeywords').value = article.keywords.join(', ');
-    document.getElementById('articleContentInput').value = article.content;
+
+    // Загружаем контент в Quill
+    if (quill) {
+        quill.root.innerHTML = article.content;
+        document.getElementById('articleContentInput').value = article.content;
+    }
 
     // Меняем заголовок и текст кнопки
     document.querySelector('#addArticleModal h2').textContent = 'Редактировать тему';
@@ -905,6 +989,33 @@ loadViews();
 window.resetViews = resetAllViews;
 
 // ===== РАБОТА С МЕДИА ФАЙЛАМИ =====
+
+// ImgBB API Key (бесплатный, получить на https://api.imgbb.com/)
+const IMGBB_API_KEY = 'b3f1c8e5c8f8c8e5c8f8c8e5c8f8c8e5'; // Замените на свой ключ
+
+// Загрузить изображение на ImgBB
+async function uploadImageToImgBB(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            return result.data.url;
+        } else {
+            throw new Error('Ошибка загрузки на ImgBB');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки изображения:', error);
+        throw error;
+    }
+}
 
 // Хранилище для загруженных медиа (временное, до сохранения статьи)
 let uploadedImages = [];
