@@ -120,9 +120,15 @@ async def handle_suggestion(request):
             headers={'Access-Control-Allow-Origin': '*'}
         )
 
+async def health_check(request):
+    """Health check для Render"""
+    return web.Response(text="OK", status=200)
+
 async def start_web_server():
     """Запуск веб-сервера для приема запросов"""
     app = web.Application()
+    app.router.add_get('/', health_check)
+    app.router.add_get('/health', health_check)
     app.router.add_post('/api/suggest', handle_suggestion)
     app.router.add_options('/api/suggest', handle_suggestion)
 
