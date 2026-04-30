@@ -11,6 +11,7 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
@@ -83,8 +84,8 @@
                 <h2>Вход для администратора</h2>
                 <form id="adminLoginForm">
                     <div class="form-group">
-                        <label for="adminUsername">Логин</label>
-                        <input type="text" id="adminUsername" placeholder="admin" required>
+                        <label for="adminUsername">Email</label>
+                        <input type="email" id="adminUsername" placeholder="admin@example.com" required>
                     </div>
                     <div class="form-group">
                         <label for="adminPassword">Пароль</label>

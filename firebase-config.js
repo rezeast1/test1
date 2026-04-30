@@ -13,12 +13,14 @@ const firebaseConfig = {
 // Инициализация Firebase
 let database;
 let storage;
+let auth;
 
 function initFirebase() {
     if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
         database = firebase.database();
         storage = firebase.storage();
+        auth = firebase.auth();
         console.log('Firebase инициализирован');
         return true;
     } else {

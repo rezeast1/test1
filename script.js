@@ -81,11 +81,24 @@ function imageHandler() {
 
 // Проверка авторизации админа при загрузке
 function checkAdminAuth() {
-    const adminAuth = localStorage.getItem('adminAuth');
-    if (adminAuth === 'true') {
-        isAdmin = true;
-        showAdminControls();
+    if (!auth) {
+        console.log('Firebase Auth не инициализирован');
+        return;
     }
+
+    // Слушаем изменения состояния авторизации
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Пользователь авторизован
+            isAdmin = true;
+            showAdminControls();
+            console.log('Админ авторизован:', user.email);
+        } else {
+            // Пользователь не авторизован
+            isAdmin = false;
+            hideAdminControls();
+        }
+    });
 }
 
 // Показать элементы управления для админа
@@ -612,10 +625,18 @@ adminLoginBtn.addEventListener('click', () => {
     if (isAdmin) {
         // Выход
         if (confirm('Выйти из режима администратора?')) {
-            isAdmin = false;
-            localStorage.removeItem('adminAuth');
-            hideAdminControls();
-            alert('Вы вышли из режима администратора');
+            // Выход из Firebase Auth
+            if (auth) {
+                auth.signOut().then(() => {
+                    isAdmin = false;
+                    hideAdminControls();
+                    alert('Вы вышли из режима администратора');
+                });
+            } else {
+                isAdmin = false;
+                hideAdminControls();
+                alert('Вы вышли из режима администратора');
+            }
         }
     } else {
         // Вход
@@ -633,23 +654,50 @@ cancelAdminLogin.addEventListener('click', () => {
     adminLoginForm.reset();
 });
 
-// Обработка входа админа
-adminLoginForm.addEventListener('submit', (e) => {
+// Обработка входа админа через Firebase Auth
+adminLoginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const username = document.getElementById('adminUsername').value.trim();
+    const email = document.getElementById('adminUsername').value.trim();
     const password = document.getElementById('adminPassword').value.trim();
 
-    // Простая проверка (в продакшене используйте Firebase Auth или backend)
-    if (username === 'admin' && password === 'admin123') {
+    if (!auth) {
+        alert('❌ Firebase Authentication не инициализирован');
+        return;
+    }
+
+    const submitBtn = adminLoginForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Вход...';
+
+    try {
+        // Вход через Firebase Auth
+        await auth.signInWithEmailAndPassword(email, password);
+
         isAdmin = true;
-        localStorage.setItem('adminAuth', 'true');
         showAdminControls();
         adminLoginModal.classList.add('hidden');
         adminLoginForm.reset();
         alert('✅ Вы вошли как администратор');
-    } else {
-        alert('❌ Неверный логин или пароль');
+    } catch (error) {
+        console.error('Ошибка входа:', error);
+
+        let errorMessage = '❌ Ошибка входа';
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = '❌ Пользователь не найден';
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = '❌ Неверный пароль';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = '❌ Неверный формат email';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = '❌ Слишком много попыток. Попробуйте позже';
+        }
+
+        alert(errorMessage);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
 });
 
