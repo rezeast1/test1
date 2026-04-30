@@ -23,12 +23,14 @@ function checkAdminAuth() {
 function showAdminControls() {
     document.getElementById('addArticleBtn').classList.remove('hidden');
     document.getElementById('adminLoginBtn').textContent = 'Выйти';
+    displayAllArticles(); // Обновляем список статей с кнопками
 }
 
 // Скрыть элементы управления админа
 function hideAdminControls() {
     document.getElementById('addArticleBtn').classList.add('hidden');
     document.getElementById('adminLoginBtn').textContent = 'Вход для админа';
+    displayAllArticles(); // Обновляем список статей без кнопок
 }
 
 // Система подсчета просмотров с поддержкой Firebase
