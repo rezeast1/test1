@@ -237,6 +237,16 @@ header h1 {
     font-weight: 700;
 }
 
+.result-title .highlight {
+    background: #fef3c7;
+    -webkit-background-clip: border-box;
+    -webkit-text-fill-color: #92400e;
+    background-clip: border-box;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
 .result-keywords {
     font-size: 0.9em;
     color: #6b7280;
