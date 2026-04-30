@@ -512,15 +512,19 @@ addArticleForm.addEventListener('submit', async (e) => {
     const keywordsInput = document.getElementById('articleKeywords');
     const contentInput = document.getElementById('articleContent');
 
+    console.log('Form inputs:', { titleInput, keywordsInput, contentInput });
+
     if (!titleInput || !keywordsInput || !contentInput) {
         console.error('Не найдены поля формы');
         alert('❌ Ошибка: не найдены поля формы');
         return;
     }
 
-    const title = titleInput.value.trim();
-    const keywordsStr = keywordsInput.value.trim();
-    const content = contentInput.value.trim();
+    const title = (titleInput.value || '').trim();
+    const keywordsStr = (keywordsInput.value || '').trim();
+    const content = (contentInput.value || '').trim();
+
+    console.log('Form values:', { title, keywordsStr, content });
 
     if (!title || !keywordsStr || !content) {
         alert('Пожалуйста, заполните все обязательные поля');
