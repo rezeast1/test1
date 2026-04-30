@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вики - База знаний</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Вики</h1>
+            <p class="subtitle">База знаний</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Поиск по статьям..." autocomplete="off">
+            <button id="searchBtn">Искать</button>
+        </div>
+
+        <div id="results" class="results-container"></div>
+
+        <div id="articleView" class="article-view hidden">
+            <button id="backBtn" class="back-btn">← Назад к результатам</button>
+            <article id="articleContent"></article>
+        </div>
+
+        <div id="allArticles" class="all-articles">
+            <div class="articles-header">
+                <h2>Все статьи</h2>
+                <button id="resetViewsBtn" class="reset-btn">Сбросить просмотры</button>
+            </div>
+            <div id="articlesList"></div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
