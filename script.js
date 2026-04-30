@@ -61,54 +61,68 @@ function loadViews() {
 function loadArticlesFromFirebase(callback) {
     if (!database) {
         console.error('Firebase не инициализирован');
+        displayAllArticles();
         return;
     }
 
     const articlesRef = database.ref('articles');
+
+    // Сначала показываем статьи из data.js
+    displayAllArticles();
+
     articlesRef.once('value', (snapshot) => {
         const firebaseArticles = snapshot.val();
 
         if (firebaseArticles) {
-            // Объединяем статьи из data.js и Firebase
-            const firebaseIds = Object.keys(firebaseArticles).map(id => parseInt(id));
+            // Обновляем существующие статьи из Firebase
+            Object.keys(firebaseArticles).forEach(id => {
+                const articleId = parseInt(id);
+                const existingArticle = articles.find(a => a.id === articleId);
 
-            // Обновляем существующие статьи
-            articles.forEach(article => {
-                if (firebaseArticles[article.id]) {
-                    Object.assign(article, firebaseArticles[article.id]);
-                }
-            });
-
-            // Добавляем новые статьи из Firebase
-            firebaseIds.forEach(id => {
-                if (!articles.find(a => a.id === id)) {
+                if (existingArticle) {
+                    // Обновляем существующую статью
+                    Object.assign(existingArticle, firebaseArticles[id]);
+                } else {
+                    // Добавляем новую статью из Firebase
                     articles.push({
-                        id: id,
+                        id: articleId,
                         ...firebaseArticles[id]
                     });
                 }
             });
+
+            displayAllArticles();
         }
 
         // Подписываемся на обновления статей в реальном времени
-        articlesRef.on('value', (snapshot) => {
-            const firebaseArticles = snapshot.val();
-            if (firebaseArticles) {
-                // Обновляем статьи
-                Object.keys(firebaseArticles).forEach(id => {
-                    const articleId = parseInt(id);
-                    const existingArticle = articles.find(a => a.id === articleId);
+        articlesRef.on('child_changed', (snapshot) => {
+            const articleId = parseInt(snapshot.key);
+            const article = articles.find(a => a.id === articleId);
 
-                    if (existingArticle) {
-                        Object.assign(existingArticle, firebaseArticles[id]);
-                    } else {
-                        articles.push({
-                            id: articleId,
-                            ...firebaseArticles[id]
-                        });
-                    }
+            if (article) {
+                Object.assign(article, snapshot.val());
+                displayAllArticles();
+            }
+        });
+
+        articlesRef.on('child_added', (snapshot) => {
+            const articleId = parseInt(snapshot.key);
+
+            if (!articles.find(a => a.id === articleId)) {
+                articles.push({
+                    id: articleId,
+                    ...snapshot.val()
                 });
+                displayAllArticles();
+            }
+        });
 
+        articlesRef.on('child_removed', (snapshot) => {
+            const articleId = parseInt(snapshot.key);
+            const index = articles.findIndex(a => a.id === articleId);
+
+            if (index > -1) {
+                articles.splice(index, 1);
                 displayAllArticles();
             }
         });
