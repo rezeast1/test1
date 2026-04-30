@@ -4,44 +4,33 @@ let telegramUser = null;
 
 // Проверка что сайт открыт через Telegram
 function checkTelegramAuth() {
-    // Даем время на загрузку Telegram SDK
-    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
-        console.log('Telegram WebApp SDK не загружен');
-        // Проверяем URL параметры (Telegram передает tgWebAppData)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (!urlParams.has('tgWebAppData') && !window.location.hash.includes('tgWebAppData')) {
-            // Сайт открыт не через Telegram
-            showAccessDenied();
-            return false;
-        }
-    }
+    // ВРЕМЕННО: разрешаем доступ всегда для отладки
+    console.log('Проверка Telegram авторизации...');
+    console.log('Telegram объект:', typeof Telegram);
+    console.log('Telegram.WebApp:', typeof Telegram !== 'undefined' ? Telegram.WebApp : 'не определен');
 
-    try {
-        const tg = Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+    if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+        try {
+            const tg = Telegram.WebApp;
+            tg.ready();
+            tg.expand();
 
-        // Получаем данные пользователя
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            telegramUser = tg.initDataUnsafe.user;
-            console.log('Telegram пользователь:', telegramUser);
-            return true;
-        } else {
-            console.log('Не удалось получить данные пользователя');
-            // Пробуем получить из URL
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('tgWebAppData')) {
-                console.log('Обнаружены данные Telegram в URL');
-                return true; // Разрешаем доступ
+            // Получаем данные пользователя
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramUser = tg.initDataUnsafe.user;
+                console.log('✅ Telegram пользователь получен:', telegramUser);
+            } else {
+                console.log('⚠️ Данные пользователя не получены');
             }
-            showAccessDenied();
-            return false;
+        } catch (error) {
+            console.error('❌ Ошибка инициализации Telegram WebApp:', error);
         }
-    } catch (error) {
-        console.error('Ошибка инициализации Telegram WebApp:', error);
-        showAccessDenied();
-        return false;
+    } else {
+        console.log('⚠️ Telegram WebApp SDK не загружен');
     }
+
+    // ВРЕМЕННО: всегда возвращаем true
+    return true;
 }
 
 // Показать сообщение об ограничении доступа
