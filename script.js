@@ -160,6 +160,88 @@ function incrementViews(articleId) {
     }
 }
 
+// Обработка оценки статьи
+async function handleFeedback(articleId, isHelpful) {
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    // Проверяем, не оценивал ли пользователь уже эту статью
+    const ratedArticles = JSON.parse(localStorage.getItem('ratedArticles') || '{}');
+    if (ratedArticles[articleId]) {
+        alert('Вы уже оценили эту статью');
+        return;
+    }
+
+    // Увеличиваем счетчик
+    if (isHelpful) {
+        article.helpful = (article.helpful || 0) + 1;
+    } else {
+        article.notHelpful = (article.notHelpful || 0) + 1;
+    }
+
+    // Сохраняем в Firebase
+    if (useFirebase) {
+        try {
+            const articleRef = database.ref('articles/' + articleId);
+            await articleRef.update({
+                helpful: article.helpful,
+                notHelpful: article.notHelpful
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения оценки:', error);
+        }
+    }
+
+    // Отмечаем, что пользователь оценил статью
+    ratedArticles[articleId] = isHelpful ? 'helpful' : 'notHelpful';
+    localStorage.setItem('ratedArticles', JSON.stringify(ratedArticles));
+
+    // Если "Не помогло", спрашиваем что не так
+    if (!isHelpful) {
+        const feedback = prompt('Что можно улучшить в этой статье?');
+        if (feedback && feedback.trim()) {
+            // Отправляем в Telegram
+            await sendFeedbackToTelegram(article.title, feedback);
+        }
+    }
+
+    // Обновляем отображение
+    showArticle(articleId);
+    alert(isHelpful ? '✅ Спасибо за оценку!' : '✅ Спасибо за отзыв! Мы улучшим эту статью.');
+}
+
+// Отправить отзыв в Telegram
+async function sendFeedbackToTelegram(articleTitle, feedback) {
+    const date = new Date().toLocaleString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const data = {
+        title: `Отзыв о статье: ${articleTitle}`,
+        keywords: '',
+        content: feedback,
+        email: '',
+        date: date
+    };
+
+    try {
+        await fetch(BOT_SERVER_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+    } catch (error) {
+        console.error('Ошибка отправки отзыва:', error);
+    }
+}
+
 function resetAllViews() {
     if (confirm('Вы уверены, что хотите сбросить все просмотры?')) {
         articles.forEach(article => {
@@ -307,6 +389,9 @@ function showArticle(id) {
         p.trim() ? `<p>${p.trim()}</p>` : ''
     ).join('');
 
+    const totalRatings = (article.helpful || 0) + (article.notHelpful || 0);
+    const helpfulPercent = totalRatings > 0 ? Math.round((article.helpful / totalRatings) * 100) : 0;
+
     articleContent.innerHTML = `
         <h2>${article.title}</h2>
         <div class="article-meta">
@@ -317,7 +402,28 @@ function showArticle(id) {
         <div class="article-body">
             ${contentHtml}
         </div>
+        <div class="article-feedback">
+            <p class="feedback-question">Эта статья была полезна?</p>
+            <div class="feedback-buttons">
+                <button class="feedback-btn helpful-btn" data-id="${article.id}">
+                    👍 Помогло <span class="feedback-count">${article.helpful || 0}</span>
+                </button>
+                <button class="feedback-btn not-helpful-btn" data-id="${article.id}">
+                    👎 Не помогло <span class="feedback-count">${article.notHelpful || 0}</span>
+                </button>
+            </div>
+            ${totalRatings > 0 ? `<p class="feedback-stats">${helpfulPercent}% считают эту статью полезной</p>` : ''}
+        </div>
     `;
+
+    // Добавляем обработчики для кнопок оценки
+    document.querySelectorAll('.helpful-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleFeedback(parseInt(btn.dataset.id), true));
+    });
+
+    document.querySelectorAll('.not-helpful-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleFeedback(parseInt(btn.dataset.id), false));
+    });
 
     resultsContainer.classList.add('empty');
     allArticlesContainer.style.display = 'none';
@@ -650,7 +756,9 @@ async function saveArticleToFirebase(article) {
         title: article.title,
         keywords: article.keywords,
         content: article.content,
-        views: article.views || 0
+        views: article.views || 0,
+        helpful: article.helpful || 0,
+        notHelpful: article.notHelpful || 0
     });
 }
 
