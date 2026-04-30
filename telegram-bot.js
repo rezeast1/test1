@@ -19,7 +19,13 @@ async function sendSuggestionToTelegram(title, keywords, content, email) {
         keywords: keywords,
         content: content,
         email: email,
-        date: date
+        date: date,
+        telegramUser: telegramUser ? {
+            id: telegramUser.id,
+            username: telegramUser.username || 'не указан',
+            first_name: telegramUser.first_name || '',
+            last_name: telegramUser.last_name || ''
+        } : null
     };
 
     try {

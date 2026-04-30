@@ -1,3 +1,79 @@
+// ===== TELEGRAM WEBAPP АВТОРИЗАЦИЯ =====
+
+let telegramUser = null;
+
+// Проверка что сайт открыт через Telegram
+function checkTelegramAuth() {
+    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
+        // Сайт открыт не через Telegram
+        showAccessDenied();
+        return false;
+    }
+
+    const tg = Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // Получаем данные пользователя
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        telegramUser = tg.initDataUnsafe.user;
+        console.log('Telegram пользователь:', telegramUser);
+        return true;
+    } else {
+        // Не удалось получить данные пользователя
+        showAccessDenied();
+        return false;
+    }
+}
+
+// Показать сообщение об ограничении доступа
+function showAccessDenied() {
+    document.body.innerHTML = `
+        <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        ">
+            <div style="
+                background: rgba(255, 255, 255, 0.95);
+                padding: 40px;
+                border-radius: 20px;
+                max-width: 500px;
+                color: #1f2937;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            ">
+                <h1 style="font-size: 2em; margin-bottom: 20px; color: #10b981;">🔒 Доступ ограничен</h1>
+                <p style="font-size: 1.1em; margin-bottom: 30px; line-height: 1.6;">
+                    Эта база знаний доступна только через Telegram бот.
+                </p>
+                <div style="
+                    background: #f3f4f6;
+                    padding: 20px;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    text-align: left;
+                ">
+                    <p style="font-weight: 600; margin-bottom: 10px;">Как получить доступ:</p>
+                    <ol style="margin-left: 20px; line-height: 1.8;">
+                        <li>Найдите бота в Telegram</li>
+                        <li>Отправьте команду /start</li>
+                        <li>Нажмите кнопку "Открыть Mini App 🚀"</li>
+                    </ol>
+                </div>
+                <p style="color: #6b7280; font-size: 0.9em;">
+                    Если у вас нет доступа к боту, обратитесь к администратору.
+                </p>
+            </div>
+        </div>
+    `;
+}
+
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const resultsContainer = document.getElementById('results');
@@ -1026,6 +1102,12 @@ suggestForm.addEventListener('submit', async (e) => {
 
 // Обработчик кнопки сброса просмотров
 document.getElementById('resetViewsBtn').addEventListener('click', resetAllViews);
+
+// ВАЖНО: Сначала проверяем Telegram авторизацию
+if (!checkTelegramAuth()) {
+    // Если проверка не прошла, страница уже заменена на сообщение об ошибке
+    throw new Error('Доступ запрещен');
+}
 
 // Проверяем авторизацию админа при загрузке
 checkAdminAuth();

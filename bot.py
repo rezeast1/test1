@@ -85,9 +85,19 @@ async def handle_suggestion(request):
         keywords = data.get('keywords', '')
         content = data.get('content', 'Без описания')
         email = data.get('email', '')
+        telegram_user = data.get('telegramUser')
 
         # Формируем сообщение для специалиста
         message = f"🆕 <b>Новое предложение темы для Вики</b>\n\n"
+
+        # Информация о пользователе Telegram
+        if telegram_user:
+            user_name = f"{telegram_user.get('first_name', '')} {telegram_user.get('last_name', '')}".strip()
+            username = telegram_user.get('username', 'не указан')
+            user_id = telegram_user.get('id', 'неизвестен')
+            message += f"👤 <b>От пользователя:</b> {user_name} (@{username})\n"
+            message += f"🆔 <b>Telegram ID:</b> <code>{user_id}</code>\n\n"
+
         message += f"📌 <b>Название:</b> {title}\n\n"
 
         if keywords:
