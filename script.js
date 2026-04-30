@@ -290,6 +290,78 @@ searchInput.addEventListener('input', () => {
 
 backBtn.addEventListener('click', hideArticle);
 
+// Модальное окно для предложения темы
+const suggestModal = document.getElementById('suggestModal');
+const suggestBtn = document.getElementById('suggestBtn');
+const closeModal = document.querySelector('.close-modal');
+const cancelSuggest = document.getElementById('cancelSuggest');
+const suggestForm = document.getElementById('suggestForm');
+
+// Открыть модальное окно
+suggestBtn.addEventListener('click', () => {
+    suggestModal.classList.remove('hidden');
+});
+
+// Закрыть модальное окно
+closeModal.addEventListener('click', () => {
+    suggestModal.classList.add('hidden');
+    suggestForm.reset();
+});
+
+cancelSuggest.addEventListener('click', () => {
+    suggestModal.classList.add('hidden');
+    suggestForm.reset();
+});
+
+// Закрыть при клике вне модального окна
+window.addEventListener('click', (e) => {
+    if (e.target === suggestModal) {
+        suggestModal.classList.add('hidden');
+        suggestForm.reset();
+    }
+});
+
+// Отправка формы предложения
+suggestForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('suggestTitle').value.trim();
+    const keywords = document.getElementById('suggestKeywords').value.trim();
+    const content = document.getElementById('suggestContent').value.trim();
+    const email = document.getElementById('suggestEmail').value.trim();
+
+    if (!title || !content) {
+        alert('Пожалуйста, заполните обязательные поля');
+        return;
+    }
+
+    // Блокируем кнопку отправки
+    const submitBtn = suggestForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Отправка...';
+
+    try {
+        // Отправляем в Telegram
+        await sendSuggestionToTelegram(title, keywords, content, email);
+
+        // Сохраняем в Firebase (опционально)
+        if (useFirebase) {
+            await saveSuggestionToFirebase(title, keywords, content, email);
+        }
+
+        alert('✅ Спасибо! Ваше предложение отправлено.');
+        suggestModal.classList.add('hidden');
+        suggestForm.reset();
+    } catch (error) {
+        console.error('Ошибка отправки:', error);
+        alert('❌ Ошибка отправки. Попробуйте позже или свяжитесь с администратором.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
 // Обработчик кнопки сброса просмотров
 document.getElementById('resetViewsBtn').addEventListener('click', resetAllViews);
 

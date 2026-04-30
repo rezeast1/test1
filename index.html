@@ -32,14 +32,48 @@
         <div id="allArticles" class="all-articles">
             <div class="articles-header">
                 <h2>Все статьи</h2>
-                <button id="resetViewsBtn" class="reset-btn">Сбросить просмотры</button>
+                <div class="header-buttons">
+                    <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
+                    <button id="resetViewsBtn" class="reset-btn">Сбросить просмотры</button>
+                </div>
             </div>
             <div id="articlesList"></div>
+        </div>
+
+        <!-- Модальное окно для предложения темы -->
+        <div id="suggestModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Предложить новую тему</h2>
+                <form id="suggestForm">
+                    <div class="form-group">
+                        <label for="suggestTitle">Название темы *</label>
+                        <input type="text" id="suggestTitle" placeholder="Например: TypeScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestKeywords">Ключевые слова (через запятую)</label>
+                        <input type="text" id="suggestKeywords" placeholder="программирование, типизация, JavaScript">
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestContent">Описание темы *</label>
+                        <textarea id="suggestContent" rows="8" placeholder="Опишите тему, которую хотите добавить..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestEmail">Ваш email (необязательно)</label>
+                        <input type="email" id="suggestEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Отправить предложение</button>
+                        <button type="button" class="cancel-btn" id="cancelSuggest">Отмена</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="data.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="telegram-bot.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
