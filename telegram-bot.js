@@ -1,7 +1,7 @@
 // Telegram Bot Configuration
-// Отправка через локальный Python бот-сервер
+// Отправка через Render бот-сервер
 
-const BOT_SERVER_URL = 'http://localhost:8080/api/suggest';
+const BOT_SERVER_URL = 'https://test1-1-cd2h.onrender.com/api/suggest';
 
 // Отправить предложение темы через бот-сервер
 async function sendSuggestionToTelegram(title, keywords, content, email) {
