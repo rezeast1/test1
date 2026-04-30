@@ -94,40 +94,41 @@ function loadArticlesFromFirebase(callback) {
             displayAllArticles();
         }
 
-        // Подписываемся на обновления статей в реальном времени
-        articlesRef.on('child_changed', (snapshot) => {
-            const articleId = parseInt(snapshot.key);
-            const article = articles.find(a => a.id === articleId);
-
-            if (article) {
-                Object.assign(article, snapshot.val());
-                displayAllArticles();
-            }
-        });
-
-        articlesRef.on('child_added', (snapshot) => {
-            const articleId = parseInt(snapshot.key);
-
-            if (!articles.find(a => a.id === articleId)) {
-                articles.push({
-                    id: articleId,
-                    ...snapshot.val()
-                });
-                displayAllArticles();
-            }
-        });
-
-        articlesRef.on('child_removed', (snapshot) => {
-            const articleId = parseInt(snapshot.key);
-            const index = articles.findIndex(a => a.id === articleId);
-
-            if (index > -1) {
-                articles.splice(index, 1);
-                displayAllArticles();
-            }
-        });
-
         callback();
+    });
+
+    // Подписываемся на изменения ПОСЛЕ первой загрузки
+    articlesRef.on('child_changed', (snapshot) => {
+        const articleId = parseInt(snapshot.key);
+        const article = articles.find(a => a.id === articleId);
+
+        if (article) {
+            Object.assign(article, snapshot.val());
+            displayAllArticles();
+        }
+    });
+
+    articlesRef.on('child_added', (snapshot) => {
+        const articleId = parseInt(snapshot.key);
+
+        // Проверяем, что статья еще не существует
+        if (!articles.find(a => a.id === articleId)) {
+            articles.push({
+                id: articleId,
+                ...snapshot.val()
+            });
+            displayAllArticles();
+        }
+    });
+
+    articlesRef.on('child_removed', (snapshot) => {
+        const articleId = parseInt(snapshot.key);
+        const index = articles.findIndex(a => a.id === articleId);
+
+        if (index > -1) {
+            articles.splice(index, 1);
+            displayAllArticles();
+        }
     });
 }
 
@@ -594,8 +595,12 @@ addArticleForm.addEventListener('submit', async (e) => {
                 article.keywords = keywords;
                 article.content = content;
 
+                // Сохраняем в Firebase БЕЗ добавления в массив (уже там)
                 if (useFirebase) {
                     await saveArticleToFirebase(article);
+                } else {
+                    // Обновляем отображение если нет Firebase
+                    displayAllArticles();
                 }
 
                 alert('✅ Тема успешно обновлена!');
@@ -611,16 +616,21 @@ addArticleForm.addEventListener('submit', async (e) => {
                 views: 0
             };
 
+            // Добавляем в массив
             articles.push(newArticle);
 
+            // Сохраняем в Firebase
             if (useFirebase) {
                 await saveArticleToFirebase(newArticle);
+            } else {
+                // Обновляем отображение если нет Firebase
+                displayAllArticles();
             }
 
             alert('✅ Тема успешно добавлена!');
         }
 
-        displayAllArticles();
+        // Закрываем модальное окно
         addArticleModal.classList.add('hidden');
         addArticleForm.reset();
         editingArticleId = null;
@@ -632,11 +642,17 @@ addArticleForm.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Ошибка:', error);
         alert('❌ Ошибка при сохранении темы: ' + error.message);
+
+        // Откатываем изменения если была ошибка при добавлении
+        if (!editingArticleId) {
+            const index = articles.findIndex(a => a.id === articles[articles.length - 1].id);
+            if (index > -1) articles.splice(index, 1);
+        }
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
-});
+}, {once: false});
 
 // Удалить статью
 async function deleteArticle(articleId) {
