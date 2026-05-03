@@ -1050,8 +1050,8 @@ async function syncArticlesToFirebase() {
 
     console.log('Синхронизация статей с Firebase...');
 
-    // Загружаем статьи из data.js (они должны быть в глобальной переменной)
-    const dataJsArticles = [
+    // Загружаем статьи из data.js заново
+    const articlesFromDataJs = [
         {
             id: 1,
             title: "Открытие кассы",
@@ -1065,7 +1065,9 @@ async function syncArticlesToFirebase() {
         Важно зафиксировать точное время открытия и начальную сумму в кассе — эти данные понадобятся при закрытии смены для сверки.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 2,
@@ -1080,7 +1082,9 @@ async function syncArticlesToFirebase() {
         Расхождения между фактической суммой и данными системы должны быть задокументированы. Недостача или излишек фиксируются в специальном акте.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 3,
@@ -1095,7 +1099,9 @@ async function syncArticlesToFirebase() {
         Возврат по безналичному расчету осуществляется на ту же карту, с которой была произведена оплата. Срок возврата — от 3 до 30 дней в зависимости от банка.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 4,
@@ -1110,7 +1116,9 @@ async function syncArticlesToFirebase() {
         Важно: никогда не вводите PIN-код за покупателя, не принимайте карты без чипа или магнитной полосы, проверяйте подпись на обратной стороне карты при необходимости.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 5,
@@ -1125,7 +1133,9 @@ async function syncArticlesToFirebase() {
         Частые проблемы: поврежденный или загрязненный штрих-код, слишком мелкий шрифт, блики на упаковке. Решение: протереть код, изменить угол сканирования или ввести цифры вручную.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 6,
@@ -1140,7 +1150,9 @@ async function syncArticlesToFirebase() {
         При сбое весов: проверить подключение к сети, откалибровать весы, обратиться к техническому специалисту. Запрещено использовать неисправные весы.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 7,
@@ -1155,7 +1167,9 @@ async function syncArticlesToFirebase() {
         Признаки фальшивых купюр: отсутствие водяных знаков, нечеткая печать, неправильная текстура бумаги. При подозрении — вежливо попросить другую купюру и сообщить администратору.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 8,
@@ -1170,7 +1184,9 @@ async function syncArticlesToFirebase() {
         Важно: скидки не суммируются, если это не указано в условиях акции. При возникновении вопросов — обратиться к администратору или проверить информацию в системе.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 9,
@@ -1185,7 +1201,9 @@ async function syncArticlesToFirebase() {
         Если не можете решить проблему самостоятельно — пригласите администратора. Никогда не повышайте голос и не вступайте в спор с покупателем.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         },
         {
             id: 10,
@@ -1200,19 +1218,21 @@ async function syncArticlesToFirebase() {
         Кассир обязан: знать ассортимент товаров, уметь работать со всем оборудованием, соблюдать дресс-код, быть вежливым с покупателями.`,
             views: 0,
             helpful: 0,
-            notHelpful: 0
+            notHelpful: 0,
+            images: [],
+            videos: []
         }
     ];
 
     try {
-        for (const article of dataJsArticles) {
+        for (const article of articlesFromDataJs) {
             await saveArticleToFirebase(article);
             console.log(`Статья "${article.title}" синхронизирована`);
         }
 
         // Обновляем локальный массив
         articles.length = 0;
-        articles.push(...dataJsArticles);
+        articles.push(...articlesFromDataJs);
 
         console.log('✅ Все статьи успешно синхронизированы с Firebase');
         displayAllArticles();
