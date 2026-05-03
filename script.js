@@ -187,6 +187,7 @@ function checkAdminAuth() {
 // Показать элементы управления для админа
 function showAdminControls() {
     document.getElementById('addArticleBtn').classList.remove('hidden');
+    document.getElementById('resetViewsBtn').classList.remove('hidden');
     document.getElementById('adminLoginBtn').textContent = 'Выйти';
     displayAllArticles(); // Обновляем список статей с кнопками
 }
@@ -194,6 +195,7 @@ function showAdminControls() {
 // Скрыть элементы управления админа
 function hideAdminControls() {
     document.getElementById('addArticleBtn').classList.add('hidden');
+    document.getElementById('resetViewsBtn').classList.add('hidden');
     document.getElementById('adminLoginBtn').textContent = 'Вход для админа';
     displayAllArticles(); // Обновляем список статей без кнопок
 }
@@ -446,7 +448,10 @@ function normalizeText(text) {
 
 function highlightText(text, query) {
     if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
+    // Экранируем специальные символы в запросе
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Ищем целые слова, содержащие запрос (включая кириллицу)
+    const regex = new RegExp(`([\\wа-яА-ЯёЁ]*${escapedQuery}[\\wа-яА-ЯёЁ]*)`, 'gi');
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
