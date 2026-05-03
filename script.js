@@ -619,7 +619,10 @@ function showArticle(id) {
 
 function hideArticle() {
     articleView.classList.add('hidden');
-    resultsContainer.classList.remove('empty');
+    // Очищаем поиск и скрываем результаты
+    searchInput.value = '';
+    resultsContainer.innerHTML = '';
+    resultsContainer.classList.add('empty');
     allArticlesContainer.style.display = 'block';
 }
 
@@ -687,14 +690,36 @@ searchInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Живой поиск при вводе
 searchInput.addEventListener('input', () => {
-    if (searchInput.value === '') {
+    const query = searchInput.value.trim();
+    if (query === '') {
         resultsContainer.innerHTML = '';
         resultsContainer.classList.add('empty');
+        allArticlesContainer.style.display = 'block';
+    } else {
+        searchArticles(query);
+        allArticlesContainer.style.display = 'none';
     }
 });
 
 backBtn.addEventListener('click', hideArticle);
+
+// Клик на заголовок TopGlass возвращает к списку тем
+document.querySelector('header h1').addEventListener('click', () => {
+    // Скрываем статью если открыта
+    articleView.classList.add('hidden');
+    // Очищаем поиск
+    searchInput.value = '';
+    resultsContainer.innerHTML = '';
+    resultsContainer.classList.add('empty');
+    // Показываем список всех статей
+    allArticlesContainer.style.display = 'block';
+    window.scrollTo(0, 0);
+});
+
+// Делаем заголовок кликабельным
+document.querySelector('header h1').style.cursor = 'pointer';
 
 // Авторизация админа
 const adminLoginModal = document.getElementById('adminLoginModal');
