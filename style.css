@@ -980,6 +980,25 @@ header h1:hover {
     .media-preview {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
+
+    /* Предотвращение переполнения текста */
+    .article-body,
+    .article-view,
+    .result-item,
+    .article-item,
+    .modal-content,
+    .results-container {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .article-title,
+    .result-title,
+    h1, h2, h3, h4, h5, h6 {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
 }
 
 /* Animations */
