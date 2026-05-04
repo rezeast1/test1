@@ -312,7 +312,8 @@ header h1:hover {
 .article-media video {
     width: 100%;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* Feedback */
@@ -674,7 +675,8 @@ header h1:hover {
     height: 120px;
     object-fit: cover;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* Responsive */
