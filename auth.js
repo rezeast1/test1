@@ -409,11 +409,11 @@ async function loadUsersList() {
 
             html += `
                 <tr>
-                    <td><strong>${user.username || 'Не указано'}</strong></td>
-                    <td>${user.name || 'Не указано'}</td>
-                    <td>${date}</td>
-                    <td>${role}</td>
-                    <td>
+                    <td data-label="Username"><strong>${user.username || 'Не указано'}</strong></td>
+                    <td data-label="Имя">${user.name || 'Не указано'}</td>
+                    <td data-label="Дата">${date}</td>
+                    <td data-label="Роль">${role}</td>
+                    <td data-label="Действия">
                         ${!isAdminUser ? `<button class="delete-user-btn" data-uid="${uid}" data-username="${user.username}">Удалить</button>` : '<span class="admin-badge">Админ</span>'}
                     </td>
                 </tr>
