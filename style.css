@@ -958,6 +958,28 @@ header h1:hover {
         padding: 10px 16px;
         font-size: 13px;
     }
+
+    /* Ограничение изображений и видео */
+    .article-body img,
+    .article-media img,
+    .article-media video,
+    .media-preview img,
+    .media-preview video,
+    img,
+    video {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain;
+    }
+
+    .article-media {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .media-preview {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
 }
 
 /* Animations */
