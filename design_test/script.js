@@ -164,16 +164,31 @@ function imageHandler() {
 
 // Проверка авторизации админа при загрузке
 function checkAdminAuth() {
-    // Эта функция больше не используется, так как авторизация обрабатывается в auth.js
-    console.log('checkAdminAuth вызвана из script.js (устарела)');
+    if (!auth) {
+        console.log('Firebase Auth не инициализирован');
+        return;
+    }
+
+    // Слушаем изменения состояния авторизации
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Пользователь авторизован
+            isAdmin = true;
+            showAdminControls();
+            console.log('Админ авторизован:', user.email);
+        } else {
+            // Пользователь не авторизован
+            isAdmin = false;
+            hideAdminControls();
+        }
+    });
 }
 
 // Показать элементы управления для админа
 function showAdminControls() {
     document.getElementById('addArticleBtn').classList.remove('hidden');
     document.getElementById('resetViewsBtn').classList.remove('hidden');
-    document.getElementById('manageUsersBtn').classList.remove('hidden');
-    // document.getElementById('adminLoginBtn').textContent = 'Админ-панель'; // УДАЛЕНО
+    document.getElementById('adminLoginBtn').textContent = 'Выйти';
     displayAllArticles(); // Обновляем список статей с кнопками
 }
 
@@ -181,8 +196,7 @@ function showAdminControls() {
 function hideAdminControls() {
     document.getElementById('addArticleBtn').classList.add('hidden');
     document.getElementById('resetViewsBtn').classList.add('hidden');
-    document.getElementById('manageUsersBtn').classList.add('hidden');
-    // document.getElementById('adminLoginBtn').textContent = 'Вход для админа'; // УДАЛЕНО
+    document.getElementById('adminLoginBtn').textContent = 'Вход для админа';
     displayAllArticles(); // Обновляем список статей без кнопок
 }
 
@@ -428,77 +442,17 @@ function resetAllViews() {
     }
 }
 
-// Стоп-слова для фильтрации
-const stopWords = [
-    'как', 'что', 'где', 'когда', 'почему', 'зачем', 'кто', 'чем', 'какой', 'какая', 'какие',
-    'это', 'этот', 'эта', 'эти', 'тот', 'та', 'те', 'мне', 'мой', 'моя', 'мои',
-    'в', 'на', 'с', 'по', 'из', 'к', 'у', 'о', 'об', 'от', 'до', 'для', 'при', 'через',
-    'я', 'ты', 'он', 'она', 'мы', 'вы', 'они', 'надо', 'нужно', 'можно', 'ли', 'делать'
-];
-
 function normalizeText(text) {
     return text.toLowerCase().trim();
 }
 
-// Простой стемминг для русского языка
-function stem(word) {
-    word = normalizeText(word);
-
-    // Минимальная длина слова для стемминга
-    if (word.length < 4) return word;
-
-    // Удаляем распространённые окончания
-    const endings = [
-        'ение', 'ание', 'ость', 'ение', 'ание',
-        'ени', 'ани', 'ость', 'ени', 'ани',
-        'ать', 'ять', 'еть', 'ить', 'ыть',
-        'ющ', 'ащ', 'ущ', 'ящ',
-        'ова', 'ева', 'ыва', 'ива',
-        'ов', 'ев', 'ив', 'ыв',
-        'ом', 'ем', 'им', 'ым',
-        'ой', 'ей', 'ий', 'ый',
-        'ая', 'яя', 'ое', 'ее',
-        'ие', 'ые', 'ую', 'юю',
-        'ам', 'ям', 'ах', 'ях',
-        'ами', 'ями',
-        'ы', 'и', 'а', 'я', 'у', 'ю', 'о', 'е'
-    ];
-
-    for (let ending of endings) {
-        if (word.endsWith(ending) && word.length - ending.length >= 3) {
-            return word.slice(0, -ending.length);
-        }
-    }
-
-    return word;
-}
-
-// Удаление стоп-слов и разбиение на ключевые слова
-function extractKeywords(query) {
-    const normalized = normalizeText(query);
-    const words = normalized.split(/\s+/);
-
-    // Убираем стоп-слова и знаки препинания
-    const keywords = words
-        .map(word => word.replace(/[?!.,;:]/g, ''))
-        .filter(word => word.length > 2 && !stopWords.includes(word));
-
-    return keywords;
-}
-
 function highlightText(text, query) {
     if (!query) return text;
-
-    const keywords = extractKeywords(query);
-    let result = text;
-
-    keywords.forEach(keyword => {
-        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`([\\wа-яА-ЯёЁ]*${escapedKeyword}[\\wа-яА-ЯёЁ]*)`, 'gi');
-        result = result.replace(regex, '<span class="highlight">$1</span>');
-    });
-
-    return result;
+    // Экранируем специальные символы в запросе
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Ищем целые слова, содержащие запрос (включая кириллицу)
+    const regex = new RegExp(`([\\wа-яА-ЯёЁ]*${escapedQuery}[\\wа-яА-ЯёЁ]*)`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
 function searchArticles(query) {
@@ -508,111 +462,32 @@ function searchArticles(query) {
         return;
     }
 
-    const keywords = extractKeywords(query);
-
-    if (keywords.length === 0) {
-        resultsContainer.classList.remove('empty');
-        resultsContainer.innerHTML = `
-            <div class="no-results">
-                <p>Попробуйте уточнить запрос</p>
-                <p>Например: "открыть кассу" или "возврат товара"</p>
-            </div>
-        `;
-        return;
-    }
-
-    const exactResults = [];
-    const stemResults = [];
+    const normalizedQuery = normalizeText(query);
+    const keywordMatches = [];
+    const contentMatches = [];
 
     articles.forEach(article => {
-        let exactScore = 0;
-        let stemScore = 0;
-        let exactTitleMatch = false;
-        let exactKeywordsMatch = false;
-        let exactContentMatch = false;
-        let stemTitleMatch = false;
-        let stemKeywordsMatch = false;
-        let stemContentMatch = false;
+        let matchedInKeywords = false;
 
-        const normalizedTitle = normalizeText(article.title);
-        const normalizedContent = normalizeText(article.content);
-        const normalizedKeywords = article.keywords.map(k => normalizeText(k));
-
-        // Стеммированные версии
-        const stemmedTitle = normalizedTitle.split(/\s+/).map(w => stem(w)).join(' ');
-        const stemmedContent = normalizedContent.split(/\s+/).map(w => stem(w)).join(' ');
-        const stemmedKeywords = normalizedKeywords.map(k => k.split(/\s+/).map(w => stem(w)).join(' '));
-
-        keywords.forEach(keyword => {
-            const stemmedKeyword = stem(keyword);
-
-            // Точное совпадение (высокий приоритет)
-            if (normalizedTitle.includes(keyword)) {
-                exactScore += 10;
-                exactTitleMatch = true;
-            }
-            if (normalizedKeywords.some(k => k.includes(keyword))) {
-                exactScore += 5;
-                exactKeywordsMatch = true;
-            }
-            if (normalizedContent.includes(keyword)) {
-                exactScore += 2;
-                exactContentMatch = true;
-            }
-
-            // Стемминг совпадение (средний приоритет)
-            if (stemmedTitle.includes(stemmedKeyword)) {
-                stemScore += 7;
-                stemTitleMatch = true;
-            }
-            if (stemmedKeywords.some(k => k.includes(stemmedKeyword))) {
-                stemScore += 4;
-                stemKeywordsMatch = true;
-            }
-            if (stemmedContent.includes(stemmedKeyword)) {
-                stemScore += 1;
-                stemContentMatch = true;
-            }
-
-            // Префиксный поиск (низкий приоритет)
-            if (normalizedTitle.split(/\s+/).some(w => w.startsWith(keyword))) {
-                stemScore += 3;
-                stemTitleMatch = true;
-            }
-            if (normalizedKeywords.some(k => k.split(/\s+/).some(w => w.startsWith(keyword)))) {
-                stemScore += 2;
-                stemKeywordsMatch = true;
+        article.keywords.forEach(keyword => {
+            if (normalizeText(keyword).includes(normalizedQuery)) {
+                matchedInKeywords = true;
             }
         });
 
-        if (exactScore > 0) {
-            exactResults.push({
-                article: article,
-                score: exactScore,
-                titleMatch: exactTitleMatch,
-                keywordsMatch: exactKeywordsMatch,
-                contentMatch: exactContentMatch
-            });
-        } else if (stemScore > 0) {
-            stemResults.push({
-                article: article,
-                score: stemScore,
-                titleMatch: stemTitleMatch,
-                keywordsMatch: stemKeywordsMatch,
-                contentMatch: stemContentMatch
-            });
+        if (matchedInKeywords) {
+            keywordMatches.push(article);
+        } else if (normalizeText(article.title).includes(normalizedQuery) ||
+                   normalizeText(article.content).includes(normalizedQuery)) {
+            contentMatches.push(article);
         }
     });
 
-    // Сортируем по релевантности
-    exactResults.sort((a, b) => b.score - a.score);
-    stemResults.sort((a, b) => b.score - a.score);
-
-    displayResults(exactResults, stemResults, query);
+    displayResults(keywordMatches, contentMatches, query);
 }
 
-function displayResults(exactResults, stemResults, query) {
-    if (exactResults.length === 0 && stemResults.length === 0) {
+function displayResults(keywordMatches, contentMatches, query) {
+    if (keywordMatches.length === 0 && contentMatches.length === 0) {
         resultsContainer.innerHTML = '<div class="no-results">Ничего не найдено. Попробуйте другой запрос.</div>';
         resultsContainer.classList.remove('empty');
         return;
@@ -620,109 +495,54 @@ function displayResults(exactResults, stemResults, query) {
 
     let html = '';
 
-    // Точные совпадения
-    if (exactResults.length > 0) {
-        const titleMatches = exactResults.filter(r => r.titleMatch);
-        const keywordMatches = exactResults.filter(r => !r.titleMatch && r.keywordsMatch);
-        const contentMatches = exactResults.filter(r => !r.titleMatch && !r.keywordsMatch && r.contentMatch);
-
-        if (titleMatches.length > 0) {
-            html += '<div class="results-section">';
-            html += '<h3>📌 Найдено в заголовках</h3>';
-            titleMatches.forEach(result => {
-                const article = result.article;
-                const snippet = article.content.substring(0, 150) + '...';
-
-                html += `
-                    <div class="result-item" data-id="${article.id}">
-                        <div class="result-title">${highlightText(article.title, query)}</div>
-                        <div class="result-keywords">
-                            <strong>Ключевые слова:</strong> ${article.keywords.map(k => highlightText(k, query)).join(', ')}
-                        </div>
-                        <div class="result-snippet">${highlightText(snippet, query)}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-        }
-
-        if (keywordMatches.length > 0) {
-            html += '<div class="results-section">';
-            html += '<h3>🔑 Найдено в ключевых словах</h3>';
-            keywordMatches.forEach(result => {
-                const article = result.article;
-                const snippet = article.content.substring(0, 150) + '...';
-
-                html += `
-                    <div class="result-item" data-id="${article.id}">
-                        <div class="result-title">${highlightText(article.title, query)}</div>
-                        <div class="result-keywords">
-                            <strong>Ключевые слова:</strong> ${article.keywords.map(k => highlightText(k, query)).join(', ')}
-                        </div>
-                        <div class="result-snippet">${highlightText(snippet, query)}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-        }
-
-        if (contentMatches.length > 0) {
-            html += '<div class="results-section">';
-            html += '<h3>📄 Найдено в содержании</h3>';
-            contentMatches.forEach(result => {
-                const article = result.article;
-                const normalizedContent = normalizeText(article.content);
-                const keywords = extractKeywords(query);
-
-                let snippet = '';
-                let foundIndex = -1;
-
-                for (let keyword of keywords) {
-                    const index = normalizedContent.indexOf(keyword);
-                    if (index !== -1 && (foundIndex === -1 || index < foundIndex)) {
-                        foundIndex = index;
-                    }
-                }
-
-                if (foundIndex !== -1) {
-                    const start = Math.max(0, foundIndex - 50);
-                    const end = Math.min(article.content.length, foundIndex + 100);
-                    snippet = (start > 0 ? '...' : '') +
-                             article.content.substring(start, end) +
-                             (end < article.content.length ? '...' : '');
-                } else {
-                    snippet = article.content.substring(0, 150) + '...';
-                }
-
-                html += `
-                    <div class="result-item" data-id="${article.id}">
-                        <div class="result-title">${highlightText(article.title, query)}</div>
-                        <div class="result-keywords">
-                            <strong>Ключевые слова:</strong> ${article.keywords.map(k => highlightText(k, query)).join(', ')}
-                        </div>
-                        <div class="result-snippet">${highlightText(snippet, query)}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-        }
-    }
-
-    // Похожие результаты (стемминг)
-    if (stemResults.length > 0) {
+    if (keywordMatches.length > 0) {
         html += '<div class="results-section">';
-        html += '<h3>💡 Возможно вы искали?</h3>';
-        stemResults.forEach(result => {
-            const article = result.article;
+        html += '<h3>📌 Совпадения по ключевым словам</h3>';
+        keywordMatches.forEach(article => {
+            const matchedKeywords = article.keywords.filter(k =>
+                normalizeText(k).includes(normalizeText(query))
+            );
             const snippet = article.content.substring(0, 150) + '...';
 
             html += `
                 <div class="result-item" data-id="${article.id}">
-                    <div class="result-title">${article.title}</div>
+                    <div class="result-title">${highlightText(article.title, query)}</div>
+                    <div class="result-keywords">
+                        <strong>Ключевые слова:</strong> ${matchedKeywords.map(k => highlightText(k, query)).join(', ')}
+                    </div>
+                    <div class="result-snippet">${snippet}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    if (contentMatches.length > 0) {
+        html += '<div class="results-section">';
+        html += '<h3>📄 Совпадения в тексте</h3>';
+        contentMatches.forEach(article => {
+            const normalizedContent = normalizeText(article.content);
+            const normalizedQuery = normalizeText(query);
+            const index = normalizedContent.indexOf(normalizedQuery);
+
+            let snippet = '';
+            if (index !== -1) {
+                const start = Math.max(0, index - 50);
+                const end = Math.min(article.content.length, index + 100);
+                snippet = (start > 0 ? '...' : '') +
+                         article.content.substring(start, end) +
+                         (end < article.content.length ? '...' : '');
+            } else {
+                snippet = article.content.substring(0, 150) + '...';
+            }
+
+            html += `
+                <div class="result-item" data-id="${article.id}">
+                    <div class="result-title">${highlightText(article.title, query)}</div>
                     <div class="result-keywords">
                         <strong>Ключевые слова:</strong> ${article.keywords.join(', ')}
                     </div>
-                    <div class="result-snippet">${snippet}</div>
+                    <div class="result-snippet">${highlightText(snippet, query)}</div>
                 </div>
             `;
         });
@@ -875,24 +695,28 @@ function displayAllArticles() {
     }
 }
 
-// Живой поиск с задержкой (debounce)
-let searchTimeout;
+searchBtn.addEventListener('click', () => {
+    const query = searchInput.value;
+    searchArticles(query);
+});
+
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const query = searchInput.value;
+        searchArticles(query);
+    }
+});
+
+// Живой поиск при вводе
 searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim();
-
-    // Очищаем предыдущий таймер
-    clearTimeout(searchTimeout);
-
     if (query === '') {
         resultsContainer.innerHTML = '';
         resultsContainer.classList.add('empty');
         allArticlesContainer.style.display = 'block';
     } else {
-        // Задержка 300мс перед поиском
-        searchTimeout = setTimeout(() => {
-            searchArticles(query);
-            allArticlesContainer.style.display = 'none';
-        }, 300);
+        searchArticles(query);
+        allArticlesContainer.style.display = 'none';
     }
 });
 
@@ -916,14 +740,12 @@ document.querySelector('header h1').style.cursor = 'pointer';
 
 // Авторизация админа
 const adminLoginModal = document.getElementById('adminLoginModal');
-const adminLoginBtn = document.getElementById('adminLoginBtn'); // Удалена из HTML
+const adminLoginBtn = document.getElementById('adminLoginBtn');
 const closeAdminLogin = document.getElementById('closeAdminLogin');
 const cancelAdminLogin = document.getElementById('cancelAdminLogin');
 const adminLoginForm = document.getElementById('adminLoginForm');
 
 // Открыть/закрыть модальное окно входа
-// ЗАКОММЕНТИРОВАНО: кнопка adminLoginBtn удалена из HTML
-/*
 adminLoginBtn.addEventListener('click', () => {
     if (isAdmin) {
         // Выход
@@ -1003,7 +825,6 @@ adminLoginForm.addEventListener('submit', async (e) => {
         submitBtn.textContent = originalText;
     }
 });
-*/
 
 // Модальное окно добавления темы
 const addArticleModal = document.getElementById('addArticleModal');
@@ -1538,16 +1359,13 @@ if (!checkTelegramAuth()) {
 }
 
 // Инициализируем Firebase сначала
-// useFirebase = initFirebase(); // УЖЕ ВЫЗВАНО В firebase-config.js
-useFirebase = (typeof database !== 'undefined' && database !== null);
+useFirebase = initFirebase();
 
-console.log('📊 useFirebase:', useFirebase);
+// Проверяем авторизацию админа при загрузке (после инициализации Firebase)
+checkAdminAuth();
 
-// Проверяем авторизацию пользователя (из auth.js)
-checkUserAuth();
-
-// НЕ загружаем просмотры при старте - они загрузятся после авторизации в auth.js
-// loadViews();
+// Загружаем просмотры при старте
+loadViews();
 
 // Добавляем глобальную функцию для сброса просмотров (можно вызвать из консоли)
 window.resetViews = resetAllViews;

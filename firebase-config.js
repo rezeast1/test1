@@ -21,13 +21,18 @@ function initFirebase() {
         database = firebase.database();
         storage = firebase.storage();
         auth = firebase.auth();
-        console.log('Firebase инициализирован');
+        console.log('✅ Firebase инициализирован');
+        console.log('✅ auth:', auth);
+        console.log('✅ database:', database);
         return true;
     } else {
-        console.error('Firebase SDK не загружен');
+        console.error('❌ Firebase SDK не загружен');
         return false;
     }
 }
+
+// ВАЖНО: Инициализируем Firebase сразу при загрузке скрипта
+initFirebase();
 
 // Получить все просмотры из Firebase
 function getViewsFromFirebase(callback) {
