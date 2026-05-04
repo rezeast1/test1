@@ -24,11 +24,12 @@ header {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 32px;
-    padding: 20px 8px 20px 20px;
+    padding: 20px;
     background: #1e293b;
-    border-bottom: 2px solid #334155;
-    border-radius: 16px 16px 0 0;
+    border: 1px solid #334155;
+    border-radius: 16px;
     position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 header h1 {
@@ -63,6 +64,7 @@ header h1:hover {
     display: flex;
     align-items: center;
     gap: 12px;
+    padding-right: 12px;
 }
 
 .theme-toggle {
