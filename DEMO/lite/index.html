@@ -3,18 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TopGlass - База знаний (Lite)</title>
+    <title>TopGlass - База знаний</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>TopGlass</h1>
+            <div class="header-controls">
+                <button id="adminLoginBtn" class="admin-login-btn">Вход для админа</button>
+            </div>
         </header>
 
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Поиск по статьям..." autocomplete="off">
-            <button id="searchBtn">Искать</button>
         </div>
 
         <div id="results" class="results-container empty"></div>
@@ -27,12 +41,111 @@
         <div id="allArticles" class="all-articles">
             <div class="articles-header">
                 <h2>Все статьи</h2>
+                <div class="header-buttons">
+                    <button id="addArticleBtn" class="add-article-btn hidden">Добавить тему</button>
+                    <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
+                    <button id="resetViewsBtn" class="reset-btn hidden">Сбросить просмотры</button>
+                </div>
             </div>
             <div id="articlesList"></div>
         </div>
+
+        <!-- Модальное окно для предложения темы -->
+        <div id="suggestModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Предложить новую тему</h2>
+                <form id="suggestForm">
+                    <div class="form-group">
+                        <label for="suggestTitle">Название темы *</label>
+                        <input type="text" id="suggestTitle" placeholder="Например: TypeScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestKeywords">Ключевые слова (через запятую)</label>
+                        <input type="text" id="suggestKeywords" placeholder="программирование, типизация, JavaScript">
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestContent">Описание темы *</label>
+                        <textarea id="suggestContent" rows="8" placeholder="Опишите тему, которую хотите добавить..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestEmail">Ваш email (необязательно)</label>
+                        <input type="email" id="suggestEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Отправить предложение</button>
+                        <button type="button" class="cancel-btn" id="cancelSuggest">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно для входа админа -->
+        <div id="adminLoginModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeAdminLogin">&times;</span>
+                <h2>Вход для администратора</h2>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Email</label>
+                        <input type="email" id="adminUsername" placeholder="admin@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Пароль</label>
+                        <input type="password" id="adminPassword" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Войти</button>
+                        <button type="button" class="cancel-btn" id="cancelAdminLogin">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно для добавления темы (только для админа) -->
+        <div id="addArticleModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeAddArticle">&times;</span>
+                <h2>Добавить новую тему</h2>
+                <form id="addArticleForm">
+                    <div class="form-group">
+                        <label for="articleTitle">Название темы *</label>
+                        <input type="text" id="articleTitle" placeholder="Например: TypeScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleKeywords">Ключевые слова (через запятую) *</label>
+                        <input type="text" id="articleKeywords" placeholder="программирование, типизация, JavaScript" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleContentInput">Содержание темы *</label>
+                        <div id="editor" style="height: 300px; background: white;"></div>
+                        <input type="hidden" id="articleContentInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleImages">Изображения (можно выбрать несколько)</label>
+                        <input type="file" id="articleImages" accept="image/*" multiple>
+                        <div id="imagePreview" class="media-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleVideos">Видео (можно выбрать несколько)</label>
+                        <input type="file" id="articleVideos" accept="video/*" multiple>
+                        <div id="videoPreview" class="media-preview"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Добавить тему</button>
+                        <button type="button" class="cancel-btn" id="cancelAddArticle">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
     <script src="data.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="telegram-bot.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

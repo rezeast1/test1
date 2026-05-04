@@ -889,28 +889,24 @@ function displayAllArticles() {
     }
 }
 
-searchBtn.addEventListener('click', () => {
-    const query = searchInput.value;
-    searchArticles(query);
-});
-
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const query = searchInput.value;
-        searchArticles(query);
-    }
-});
-
-// Живой поиск при вводе
+// Живой поиск с задержкой (debounce)
+let searchTimeout;
 searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim();
+
+    // Очищаем предыдущий таймер
+    clearTimeout(searchTimeout);
+
     if (query === '') {
         resultsContainer.innerHTML = '';
         resultsContainer.classList.add('empty');
         allArticlesContainer.style.display = 'block';
     } else {
-        searchArticles(query);
-        allArticlesContainer.style.display = 'none';
+        // Задержка 300мс перед поиском
+        searchTimeout = setTimeout(() => {
+            searchArticles(query);
+            allArticlesContainer.style.display = 'none';
+        }, 300);
     }
 });
 

@@ -93,10 +93,9 @@ header h1:hover {
 .search-box {
     display: flex;
     align-items: center;
-    gap: 12px;
     margin-bottom: 32px;
     background: #1e293b;
-    padding: 8px 8px 8px 20px;
+    padding: 8px 20px;
     border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     border: 1px solid #334155;
@@ -110,7 +109,7 @@ header h1:hover {
 
 #searchInput {
     flex: 1;
-    padding: 14px 20px 14px 8px;
+    padding: 14px 8px;
     border: none;
     font-size: 16px;
     background: transparent;
@@ -120,24 +119,6 @@ header h1:hover {
 
 #searchInput::placeholder {
     color: #64748b;
-}
-
-#searchBtn {
-    padding: 12px 24px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-#searchBtn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
 }
 
 /* Results Container */
