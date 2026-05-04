@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopGlass - База знаний (Standard)</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TopGlass Standard</h1>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Поиск по статьям..." autocomplete="off">
+            <button id="searchBtn">Искать</button>
+        </div>
+
+        <div id="results" class="results-container empty"></div>
+
+        <div id="articleView" class="article-view hidden">
+            <button id="backBtn" class="back-btn">← Назад к результатам</button>
+            <article id="articleContent"></article>
+        </div>
+
+        <div id="allArticles" class="all-articles">
+            <div class="articles-header">
+                <h2>Все статьи</h2>
+                <div class="header-buttons">
+                    <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
+                </div>
+            </div>
+            <div id="articlesList"></div>
+        </div>
+
+        <!-- Модальное окно для предложения темы -->
+        <div id="suggestModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Предложить новую тему</h2>
+                <form id="suggestForm">
+                    <div class="form-group">
+                        <label for="suggestTitle">Название темы *</label>
+                        <input type="text" id="suggestTitle" placeholder="Например: Работа с QR-кодами" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestKeywords">Ключевые слова (через запятую)</label>
+                        <input type="text" id="suggestKeywords" placeholder="qr, оплата, сканирование">
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestContent">Описание темы *</label>
+                        <textarea id="suggestContent" rows="8" placeholder="Опишите тему, которую хотите добавить..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestEmail">Ваш email (необязательно)</label>
+                        <input type="email" id="suggestEmail" placeholder="your@email.com">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Отправить предложение</button>
+                        <button type="button" class="cancel-btn" id="cancelSuggest">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
