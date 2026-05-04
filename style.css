@@ -724,7 +724,7 @@ header h1:hover {
     }
 
     #searchInput {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .articles-header {
@@ -842,7 +842,7 @@ header h1:hover {
     .form-group textarea,
     .form-group select {
         padding: 10px 12px;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .form-actions {
@@ -991,6 +991,8 @@ header h1:hover {
         word-wrap: break-word;
         overflow-wrap: break-word;
         word-break: break-word;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .article-title,
@@ -998,6 +1000,29 @@ header h1:hover {
     h1, h2, h3, h4, h5, h6 {
         word-wrap: break-word;
         overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+    }
+
+    /* Предотвращение зума на input полях */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    /* Дополнительная защита от переполнения */
+    * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .container,
+    .modal-content,
+    .auth-modal-content {
+        overflow-x: hidden;
     }
 }
 
