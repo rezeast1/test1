@@ -1305,3 +1305,64 @@ select option {
     color: #e2e8f0;
     padding: 10px;
 }
+
+/* Quill Editor Styles */
+.ql-container {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+.ql-editor {
+    color: #e2e8f0 !important;
+    min-height: 300px;
+}
+
+.ql-editor.ql-blank::before {
+    color: #64748b !important;
+}
+
+.ql-toolbar {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+.ql-stroke {
+    stroke: #e2e8f0 !important;
+}
+
+.ql-fill {
+    fill: #e2e8f0 !important;
+}
+
+.ql-picker-label {
+    color: #e2e8f0 !important;
+}
+
+.ql-picker-options {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+.ql-picker-item {
+    color: #e2e8f0 !important;
+}
+
+.ql-picker-item:hover {
+    background: #334155 !important;
+}
+
+.ql-toolbar button:hover,
+.ql-toolbar button.ql-active {
+    background: #334155 !important;
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke {
+    stroke: #3b82f6 !important;
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button.ql-active .ql-fill {
+    fill: #3b82f6 !important;
+}
