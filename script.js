@@ -210,6 +210,7 @@ function loadViews() {
 }
 
 // Загрузить статьи из Firebase
+// Загрузить статьи из Firebase
 function loadArticlesFromFirebase(callback) {
     if (!database) {
         console.error('Firebase не инициализирован');
@@ -237,52 +238,24 @@ function loadArticlesFromFirebase(callback) {
                 });
             });
 
-            // Проверяем, есть ли новые статьи в data.js, которых нет в Firebase
-            const dataJsArticles = [...articles]; // Сохраняем текущие статьи из data.js
-            const firebaseIds = Object.keys(firebaseArticles).map(id => parseInt(id));
-
-            // Если в data.js больше статей, синхронизируем
-            if (dataJsArticles.length > firebaseIds.length) {
-                console.log('Найдены новые статьи в data.js, синхронизируем...');
-                syncArticlesToFirebase();
-            }
-
             displayAllArticles();
         }
 
         callback();
     });
 
-    // Подписываемся на изменения ПОСЛЕ первой загрузки
-    articlesRef.on('child_changed', (snapshot) => {
-        const articleId = parseInt(snapshot.key);
-        const article = articles.find(a => a.id === articleId);
-
-        if (article) {
-            Object.assign(article, snapshot.val());
-            displayAllArticles();
-        }
-    });
-
-    articlesRef.on('child_added', (snapshot) => {
-        const articleId = parseInt(snapshot.key);
-
-        // Проверяем, что статья еще не существует
-        if (!articles.find(a => a.id === articleId)) {
-            articles.push({
-                id: articleId,
-                ...snapshot.val()
+    // Подписываемся на изменения ПОСЛЕ первой загрузки (только один раз)
+    articlesRef.on('value', (snapshot) => {
+        const firebaseArticles = snapshot.val();
+        if (firebaseArticles) {
+            articles.length = 0;
+            Object.keys(firebaseArticles).forEach(id => {
+                const articleId = parseInt(id);
+                articles.push({
+                    id: articleId,
+                    ...firebaseArticles[id]
+                });
             });
-            displayAllArticles();
-        }
-    });
-
-    articlesRef.on('child_removed', (snapshot) => {
-        const articleId = parseInt(snapshot.key);
-        const index = articles.findIndex(a => a.id === articleId);
-
-        if (index > -1) {
-            articles.splice(index, 1);
             displayAllArticles();
         }
     });
