@@ -146,11 +146,20 @@ function showMainContent() {
         console.log('✅ Контейнер показан');
     }
 
-    // Показываем главное меню
-    if (typeof showMainMenu === 'function') {
-        showMainMenu();
-        console.log('✅ Главное меню показано');
-    }
+    // Показываем главное меню (с проверкой что функция существует)
+    setTimeout(() => {
+        if (typeof showMainMenu === 'function') {
+            showMainMenu();
+            console.log('✅ Главное меню показано');
+        } else {
+            console.warn('⚠️ showMainMenu не определена, показываем меню вручную');
+            // Показываем главное меню вручную
+            const mainMenu = document.getElementById('mainMenu');
+            if (mainMenu) {
+                mainMenu.classList.remove('hidden');
+            }
+        }
+    }, 100);
 }
 
 // Обновить информацию о пользователе в шапке
