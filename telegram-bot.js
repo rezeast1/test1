@@ -2,14 +2,14 @@
 // Все предложения теперь сохраняются только в Firebase
 
 // Отправить предложение темы (теперь только в Firebase)
-async function sendSuggestionToTelegram(title, keywords, content, email) {
+async function sendSuggestionToTelegram(title, keywords, content) {
     // Функция оставлена для совместимости, но отправка в Telegram отключена
     console.log('Отправка в Telegram отключена. Предложение будет сохранено только в Firebase.');
     return { success: true };
 }
 
 // Сохранить предложение в Firebase
-async function saveSuggestionToFirebase(title, keywords, content, email) {
+async function saveSuggestionToFirebase(title, keywords, content) {
     if (!database) {
         console.log('Firebase не инициализирован, предложение не сохранено в БД');
         return;
@@ -20,7 +20,6 @@ async function saveSuggestionToFirebase(title, keywords, content, email) {
         title: title,
         keywords: keywords,
         content: content,
-        email: email,
         timestamp: Date.now(),
         date: new Date().toISOString(),
         status: 'pending',

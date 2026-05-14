@@ -1486,7 +1486,6 @@ suggestForm.addEventListener('submit', async (e) => {
     const title = document.getElementById('suggestTitle').value.trim();
     const keywords = document.getElementById('suggestKeywords').value.trim();
     const content = document.getElementById('suggestContent').value.trim();
-    const email = document.getElementById('suggestEmail').value.trim();
 
     if (!title || !content) {
         alert('Пожалуйста, заполните обязательные поля');
@@ -1501,11 +1500,11 @@ suggestForm.addEventListener('submit', async (e) => {
 
     try {
         // Отправляем в Telegram
-        await sendSuggestionToTelegram(title, keywords, content, email);
+        await sendSuggestionToTelegram(title, keywords, content);
 
         // Сохраняем в Firebase (обязательно)
         if (useFirebase) {
-            await saveSuggestionToFirebase(title, keywords, content, email);
+            await saveSuggestionToFirebase(title, keywords, content);
         }
 
         alert('✅ Спасибо! Ваше предложение отправлено.');
