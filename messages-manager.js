@@ -105,6 +105,7 @@ function renderSuggestionMessage(message) {
             </div>
             <div class="message-meta">
                 <span>📅 ${date}</span>
+                <span>👤 ${message.suggestedBy || 'Аноним'}</span>
                 ${message.email ? `<span>📧 ${message.email}</span>` : ''}
             </div>
             ${message.keywords ? `<div class="message-keywords"><strong>Ключевые слова:</strong> ${message.keywords}</div>` : ''}
@@ -170,6 +171,7 @@ function renderFeedbackMessage(message) {
             </div>
             <div class="message-meta">
                 <span>📅 ${date}</span>
+                <span>👤 ${message.suggestedBy || 'Аноним'}</span>
             </div>
             <div class="message-content">${message.content}</div>
             <div class="message-actions">

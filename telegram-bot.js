@@ -23,7 +23,8 @@ async function saveSuggestionToFirebase(title, keywords, content, email) {
         email: email,
         timestamp: Date.now(),
         date: new Date().toISOString(),
-        status: 'pending'
+        status: 'pending',
+        suggestedBy: currentUser ? currentUser.email : 'Аноним'
     };
 
     try {

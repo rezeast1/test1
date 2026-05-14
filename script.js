@@ -389,7 +389,8 @@ async function sendFeedbackToTelegram(articleTitle, feedback) {
                 title: `Отзыв о статье: ${articleTitle}`,
                 content: feedback,
                 timestamp: Date.now(),
-                date: date
+                date: date,
+                suggestedBy: currentUser ? currentUser.email : 'Аноним'
             });
             console.log('Отзыв сохранён в Firebase');
         }
