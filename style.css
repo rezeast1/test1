@@ -1547,6 +1547,21 @@ select option {
 }
 
 .glass-compatible-list strong {
+    color: #e2e8f0;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.compatible-models-container {
+    margin-top: 8px;
+}
+
+.compatible-model-item {
+    color: #e2e8f0;
+    padding: 6px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
     color: #3b82f6;
 }
 

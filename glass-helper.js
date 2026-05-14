@@ -18,7 +18,6 @@ const backToMenuFromTest = document.getElementById('backToMenuFromTest');
 
 // Элементы поиска стёкол
 const glassSearchInput = document.getElementById('glassSearchInput');
-const glassSearchBtn = document.getElementById('glassSearchBtn');
 const glassResults = document.getElementById('glassResults');
 const suggestGlassBtn = document.getElementById('suggestGlassBtn');
 const manageGlassBtn = document.getElementById('manageGlassBtn');
@@ -122,12 +121,20 @@ async function searchGlass() {
             // Проверяем точное совпадение или частичное
             if (normalizedModel.includes(normalizedQuery) || normalizedQuery.includes(normalizedModel)) {
                 found = true;
+
+                // Формируем список совместимых моделей (каждая на новой строке)
+                const compatibleList = link.compatibleModels
+                    .map(model => `<div class="compatible-model-item">${model}</div>`)
+                    .join('');
+
                 html += `
                     <div class="glass-result-item">
                         <div class="glass-model-name">${link.phoneModel}</div>
                         <div class="glass-compatible-list">
-                            <strong>Совместимые стёкла:</strong><br>
-                            ${link.compatibleModels.join(', ')}
+                            <strong>Совместимые стёкла:</strong>
+                            <div class="compatible-models-container">
+                                ${compatibleList}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -146,14 +153,13 @@ async function searchGlass() {
     }
 }
 
-// Обработчик кнопки поиска
-glassSearchBtn?.addEventListener('click', searchGlass);
-
-// Поиск при нажатии Enter
-glassSearchInput?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+// Живой поиск при вводе текста
+let searchTimeout;
+glassSearchInput?.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
         searchGlass();
-    }
+    }, 300); // Задержка 300мс для оптимизации
 });
 
 // ===== ПРЕДЛОЖЕНИЕ СОВМЕСТИМОСТИ =====
