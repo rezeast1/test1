@@ -1,62 +1,14 @@
-// Telegram Bot Configuration
-// Отправка через Render бот-сервер
+// Telegram Bot Configuration - ОТКЛЮЧЕНО
+// Все предложения теперь сохраняются только в Firebase
 
-const BOT_SERVER_URL = 'https://test1-1-cd2h.onrender.com/api/suggest';
-
-// Отправить предложение темы через бот-сервер
+// Отправить предложение темы (теперь только в Firebase)
 async function sendSuggestionToTelegram(title, keywords, content, email) {
-    const date = new Date().toLocaleString('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const data = {
-        title: title,
-        keywords: keywords,
-        content: content,
-        email: email,
-        date: date,
-        telegramUser: telegramUser ? {
-            id: telegramUser.id,
-            username: telegramUser.username || 'не указан',
-            first_name: telegramUser.first_name || '',
-            last_name: telegramUser.last_name || ''
-        } : null
-    };
-
-    try {
-        const response = await fetch(BOT_SERVER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.error || 'Ошибка отправки');
-        }
-
-        return result;
-    } catch (error) {
-        console.error('Ошибка отправки предложения:', error);
-
-        // Проверяем, запущен ли бот
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            throw new Error('Бот не запущен. Пожалуйста, запустите Python бота (import asyncio.py)');
-        }
-
-        throw error;
-    }
+    // Функция оставлена для совместимости, но отправка в Telegram отключена
+    console.log('Отправка в Telegram отключена. Предложение будет сохранено только в Firebase.');
+    return { success: true };
 }
 
-// Сохранить предложение в Firebase (опционально)
+// Сохранить предложение в Firebase
 async function saveSuggestionToFirebase(title, keywords, content, email) {
     if (!database) {
         console.log('Firebase не инициализирован, предложение не сохранено в БД');
@@ -70,7 +22,8 @@ async function saveSuggestionToFirebase(title, keywords, content, email) {
         content: content,
         email: email,
         timestamp: Date.now(),
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        status: 'pending'
     };
 
     try {

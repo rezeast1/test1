@@ -174,6 +174,17 @@ function showAdminControls() {
     document.getElementById('resetViewsBtn').classList.remove('hidden');
     document.getElementById('manageUsersBtn').classList.remove('hidden');
     // document.getElementById('adminLoginBtn').textContent = 'Админ-панель'; // УДАЛЕНО
+
+    // Показываем кнопку сообщений
+    if (typeof showMessagesButton === 'function') {
+        showMessagesButton();
+    }
+
+    // Показываем кнопку управления стёклами
+    if (typeof showGlassAdminControls === 'function') {
+        showGlassAdminControls();
+    }
+
     displayAllArticles(); // Обновляем список статей с кнопками
 }
 
@@ -183,6 +194,17 @@ function hideAdminControls() {
     document.getElementById('resetViewsBtn').classList.add('hidden');
     document.getElementById('manageUsersBtn').classList.add('hidden');
     // document.getElementById('adminLoginBtn').textContent = 'Вход для админа'; // УДАЛЕНО
+
+    // Скрываем кнопку сообщений
+    if (typeof hideMessagesButton === 'function') {
+        hideMessagesButton();
+    }
+
+    // Скрываем кнопку управления стёклами
+    if (typeof hideGlassAdminControls === 'function') {
+        hideGlassAdminControls();
+    }
+
     displayAllArticles(); // Обновляем список статей без кнопок
 }
 
@@ -348,7 +370,7 @@ async function handleFeedback(articleId, isHelpful) {
     alert(isHelpful ? '✅ Спасибо за оценку!' : '✅ Спасибо за отзыв! Мы улучшим эту статью.');
 }
 
-// Отправить отзыв в Telegram
+// Отправить отзыв (теперь только в Firebase)
 async function sendFeedbackToTelegram(articleTitle, feedback) {
     const date = new Date().toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
@@ -359,22 +381,18 @@ async function sendFeedbackToTelegram(articleTitle, feedback) {
         minute: '2-digit'
     });
 
-    const data = {
-        title: `Отзыв о статье: ${articleTitle}`,
-        keywords: '',
-        content: feedback,
-        email: '',
-        date: date
-    };
-
     try {
-        await fetch(BOT_SERVER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+        // Сохраняем в Firebase для панели сообщений
+        if (useFirebase && database) {
+            const feedbackRef = database.ref('feedback');
+            await feedbackRef.push({
+                title: `Отзыв о статье: ${articleTitle}`,
+                content: feedback,
+                timestamp: Date.now(),
+                date: date
+            });
+            console.log('Отзыв сохранён в Firebase');
+        }
     } catch (error) {
         console.error('Ошибка отправки отзыва:', error);
     }
@@ -1484,7 +1502,7 @@ suggestForm.addEventListener('submit', async (e) => {
         // Отправляем в Telegram
         await sendSuggestionToTelegram(title, keywords, content, email);
 
-        // Сохраняем в Firebase (опционально)
+        // Сохраняем в Firebase (обязательно)
         if (useFirebase) {
             await saveSuggestionToFirebase(title, keywords, content, email);
         }

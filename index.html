@@ -60,6 +60,7 @@
             <h1>TopGlass</h1>
             <div class="header-controls">
                 <span id="userInfo" class="user-info hidden"></span>
+                <button id="messagesBtn" class="messages-btn hidden">Сообщения</button>
                 <button id="manageUsersBtn" class="manage-users-btn hidden">Управление пользователями</button>
                 <button id="logoutBtn" class="logout-btn hidden">Выйти</button>
             </div>
@@ -333,6 +334,24 @@
                 </form>
             </div>
         </div>
+
+        <!-- Модальное окно управления сообщениями (только для админа) -->
+        <div id="messagesModal" class="modal hidden">
+            <div class="modal-content large-modal">
+                <span class="close-modal" id="closeMessages">&times;</span>
+                <h2>Управление сообщениями</h2>
+
+                <div class="messages-tabs">
+                    <button class="messages-tab active" data-tab="suggestions">Предложенные темы</button>
+                    <button class="messages-tab" data-tab="glassSuggestions">Совместимости стёкол</button>
+                    <button class="messages-tab" data-tab="feedback">Улучшения статей</button>
+                </div>
+
+                <div id="messagesContent" class="messages-content">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Quill JS -->
@@ -344,6 +363,7 @@
     <script src="user-creation.js?v=20260504132000"></script>
     <script src="auth.js?v=20260504132000"></script>
     <script src="glass-helper.js?v=20260514084600"></script>
+    <script src="messages-manager.js?v=20260514094600"></script>
     <script src="script.js?v=20260504132000"></script>
 </body>
 </html>
