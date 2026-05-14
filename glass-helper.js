@@ -154,10 +154,10 @@ async function searchGlass() {
 }
 
 // Живой поиск при вводе текста
-let searchTimeout;
+let glassSearchTimeout;
 glassSearchInput?.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
+    clearTimeout(glassSearchTimeout);
+    glassSearchTimeout = setTimeout(() => {
         searchGlass();
     }, 300); // Задержка 300мс для оптимизации
 });
