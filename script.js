@@ -108,6 +108,9 @@ function showAdminControls() {
     document.getElementById('manageUsersBtn').classList.remove('hidden');
     // document.getElementById('adminLoginBtn').textContent = 'Админ-панель'; // УДАЛЕНО
 
+    // Скрываем кнопку "Предложить тему" для администраторов
+    document.getElementById('suggestBtn').classList.add('hidden');
+
     // Показываем кнопку сообщений
     if (typeof showMessagesButton === 'function') {
         showMessagesButton();
@@ -127,6 +130,9 @@ function hideAdminControls() {
     document.getElementById('resetViewsBtn').classList.add('hidden');
     document.getElementById('manageUsersBtn').classList.add('hidden');
     // document.getElementById('adminLoginBtn').textContent = 'Вход для админа'; // УДАЛЕНО
+
+    // Показываем кнопку "Предложить тему" для обычных пользователей
+    document.getElementById('suggestBtn').classList.remove('hidden');
 
     // Скрываем кнопку сообщений
     if (typeof hideMessagesButton === 'function') {

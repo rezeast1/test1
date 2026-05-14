@@ -61,11 +61,14 @@ function showGlassHelper() {
     glassHelperSection.classList.remove('hidden');
     testingSection.classList.add('hidden');
 
-    // Скрываем кнопки действий при открытии раздела
+    // Показываем кнопки действий при открытии раздела
     const glassActions = document.querySelector('.glass-actions');
     if (glassActions) {
-        glassActions.style.display = 'none';
+        glassActions.style.display = 'flex';
     }
+
+    // Показываем начальное сообщение
+    glassResults.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px;">Здесь пока ничего нет, попробуйте воспользоваться поиском</p>';
 }
 
 // Показать раздел Тестирование
@@ -93,9 +96,9 @@ async function searchGlass() {
     const query = glassSearchInput.value.trim();
 
     if (!query) {
-        glassResults.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px;">Введите модель телефона для поиска</p>';
-        // Скрываем кнопки действий
-        document.querySelector('.glass-actions').style.display = 'none';
+        glassResults.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px;">Здесь пока ничего нет, попробуйте воспользоваться поиском</p>';
+        // Показываем кнопки действий даже при пустом поле
+        document.querySelector('.glass-actions').style.display = 'flex';
         return;
     }
 
@@ -113,8 +116,8 @@ async function searchGlass() {
 
         if (!glassLinks) {
             glassResults.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px;">Совместимые стёкла не найдены</p>';
-            // Скрываем кнопки действий
-            document.querySelector('.glass-actions').style.display = 'none';
+            // Показываем кнопки действий
+            document.querySelector('.glass-actions').style.display = 'flex';
             return;
         }
 
@@ -157,15 +160,15 @@ async function searchGlass() {
             document.querySelector('.glass-actions').style.display = 'flex';
         } else {
             glassResults.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 40px;">Совместимые стёкла не найдены. Попробуйте другой запрос или предложите совместимость.</p>';
-            // Скрываем кнопки действий
-            document.querySelector('.glass-actions').style.display = 'none';
+            // Показываем кнопки действий
+            document.querySelector('.glass-actions').style.display = 'flex';
         }
 
     } catch (error) {
         console.error('Ошибка поиска:', error);
         glassResults.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px;">Ошибка поиска. Попробуйте позже.</p>';
-        // Скрываем кнопки действий
-        document.querySelector('.glass-actions').style.display = 'none';
+        // Показываем кнопки действий
+        document.querySelector('.glass-actions').style.display = 'flex';
     }
 }
 
@@ -250,11 +253,15 @@ suggestGlassForm?.addEventListener('submit', async (e) => {
 // Показать кнопку управления для админа
 function showGlassAdminControls() {
     manageGlassBtn.classList.remove('hidden');
+    // Скрываем кнопку "Предложить совместимость" для администраторов
+    suggestGlassBtn.classList.add('hidden');
 }
 
 // Скрыть кнопку управления
 function hideGlassAdminControls() {
     manageGlassBtn.classList.add('hidden');
+    // Показываем кнопку "Предложить совместимость" для обычных пользователей
+    suggestGlassBtn.classList.remove('hidden');
 }
 
 // Открыть панель управления связками
