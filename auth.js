@@ -55,10 +55,12 @@ function checkUserAuth() {
             if (isAdminUser) {
                 isAdmin = true;
                 showAdminControls();
+                showGlassAdminControls(); // Показываем кнопку управления стёклами для админа
                 console.log('✅ Показаны элементы управления администратора');
             } else {
                 isAdmin = false;
                 hideAdminControls();
+                hideGlassAdminControls(); // Скрываем кнопку управления стёклами
                 console.log('ℹ️ Пользователь вошел как обычный пользователь');
             }
 
@@ -142,6 +144,12 @@ function showMainContent() {
     if (container) {
         container.style.display = 'block';
         console.log('✅ Контейнер показан');
+    }
+
+    // Показываем главное меню
+    if (typeof showMainMenu === 'function') {
+        showMainMenu();
+        console.log('✅ Главное меню показано');
     }
 }
 

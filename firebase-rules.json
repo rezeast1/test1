@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())"
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "articles": {
+      ".read": "auth != null",
+      "$articleId": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+        "views": {
+          ".write": "auth != null"
+        },
+        "helpful": {
+          ".write": "auth != null"
+        },
+        "notHelpful": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "articleViews": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "suggestions": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".write": "auth != null"
+    },
+    "glassLinks": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "glassSuggestions": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".write": "auth != null"
+    }
+  }
+}

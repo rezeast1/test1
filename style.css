@@ -1366,3 +1366,334 @@ select option {
 .ql-toolbar button.ql-active .ql-fill {
     fill: #3b82f6 !important;
 }
+
+/* Main Menu Styles */
+.main-menu {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.menu-title {
+    font-size: 32px;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #3b82f6 50%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.menu-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.menu-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 2px solid #334155;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.menu-btn:hover {
+    transform: translateY(-5px);
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.menu-icon {
+    font-size: 64px;
+}
+
+.menu-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+/* Section Styles */
+.section {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.section.hidden {
+    display: none;
+}
+
+.back-to-menu-btn {
+    padding: 10px 20px;
+    background: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.back-to-menu-btn:hover {
+    background: #475569;
+    transform: translateX(-3px);
+}
+
+/* Glass Helper Section */
+.glass-search-box {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+#glassSearchInput {
+    flex: 1;
+    padding: 14px 20px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    color: #e2e8f0;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+#glassSearchInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+    padding: 14px 32px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.glass-results {
+    min-height: 200px;
+    padding: 20px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.glass-result-item {
+    padding: 16px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.glass-result-item:hover {
+    border-color: #3b82f6;
+    transform: translateX(5px);
+}
+
+.glass-model-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+}
+
+.glass-compatible-list {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.glass-compatible-list strong {
+    color: #3b82f6;
+}
+
+.glass-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.suggest-glass-btn {
+    padding: 12px 24px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.suggest-glass-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.manage-glass-btn {
+    padding: 12px 24px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.manage-glass-btn:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Glass Management */
+.glass-management-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.add-glass-link-btn {
+    padding: 10px 20px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-glass-link-btn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.glass-links-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.glass-link-item {
+    padding: 16px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.glass-link-info {
+    flex: 1;
+}
+
+.glass-link-model {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.glass-link-compatible {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.delete-glass-link-btn {
+    padding: 6px 16px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-glass-link-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* Testing Section */
+.coming-soon {
+    padding: 60px 20px;
+    text-align: center;
+    font-size: 18px;
+    color: #94a3b8;
+}
+
+/* Mobile Responsive for Menu */
+@media (max-width: 768px) {
+    .menu-title {
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+
+    .menu-buttons {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .menu-btn {
+        padding: 30px 20px;
+    }
+
+    .menu-icon {
+        font-size: 48px;
+    }
+
+    .menu-text {
+        font-size: 16px;
+    }
+
+    .glass-search-box {
+        flex-direction: column;
+    }
+
+    .search-btn {
+        width: 100%;
+    }
+
+    .glass-actions {
+        flex-direction: column;
+    }
+
+    .suggest-glass-btn,
+    .manage-glass-btn {
+        width: 100%;
+    }
+}

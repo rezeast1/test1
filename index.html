@@ -65,27 +65,75 @@
             </div>
         </header>
 
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Поиск по статьям..." autocomplete="off">
-        </div>
-
-        <div id="results" class="results-container empty"></div>
-
-        <div id="articleView" class="article-view hidden">
-            <button id="backBtn" class="back-btn">← Назад к результатам</button>
-            <article id="articleContent"></article>
-        </div>
-
-        <div id="allArticles" class="all-articles">
-            <div class="articles-header">
-                <h2>Все статьи</h2>
-                <div class="header-buttons">
-                    <button id="addArticleBtn" class="add-article-btn hidden">Добавить тему</button>
-                    <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
-                    <button id="resetViewsBtn" class="reset-btn hidden">Сбросить просмотры</button>
-                </div>
+        <!-- Главное меню -->
+        <div id="mainMenu" class="main-menu">
+            <h2 class="menu-title">Выберите раздел</h2>
+            <div class="menu-buttons">
+                <button id="testingBtn" class="menu-btn">
+                    <span class="menu-icon">📝</span>
+                    <span class="menu-text">Тестирование</span>
+                </button>
+                <button id="knowledgeBaseBtn" class="menu-btn">
+                    <span class="menu-icon">📚</span>
+                    <span class="menu-text">База знаний</span>
+                </button>
+                <button id="glassHelperBtn" class="menu-btn">
+                    <span class="menu-icon">📱</span>
+                    <span class="menu-text">Помощник замены стёкол</span>
+                </button>
             </div>
-            <div id="articlesList"></div>
+        </div>
+
+        <!-- Раздел База знаний -->
+        <div id="knowledgeBaseSection" class="section hidden">
+            <button id="backToMenuFromKB" class="back-to-menu-btn">← Главное меню</button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск по статьям..." autocomplete="off">
+            </div>
+
+            <div id="results" class="results-container empty"></div>
+
+            <div id="articleView" class="article-view hidden">
+                <button id="backBtn" class="back-btn">← Назад к результатам</button>
+                <article id="articleContent"></article>
+            </div>
+
+            <div id="allArticles" class="all-articles">
+                <div class="articles-header">
+                    <h2>Все статьи</h2>
+                    <div class="header-buttons">
+                        <button id="addArticleBtn" class="add-article-btn hidden">Добавить тему</button>
+                        <button id="suggestBtn" class="suggest-btn">Предложить тему</button>
+                        <button id="resetViewsBtn" class="reset-btn hidden">Сбросить просмотры</button>
+                    </div>
+                </div>
+                <div id="articlesList"></div>
+            </div>
+        </div>
+
+        <!-- Раздел Помощник замены стёкол -->
+        <div id="glassHelperSection" class="section hidden">
+            <button id="backToMenuFromGlass" class="back-to-menu-btn">← Главное меню</button>
+            <h2>Помощник замены стёкол</h2>
+
+            <div class="glass-search-box">
+                <input type="text" id="glassSearchInput" placeholder="Введите модель телефона (например: iPhone 12)" autocomplete="off">
+                <button id="glassSearchBtn" class="search-btn">Найти</button>
+            </div>
+
+            <div id="glassResults" class="glass-results"></div>
+
+            <div class="glass-actions">
+                <button id="suggestGlassBtn" class="suggest-glass-btn">Предложить совместимость</button>
+                <button id="manageGlassBtn" class="manage-glass-btn hidden">Управление связками</button>
+            </div>
+        </div>
+
+        <!-- Раздел Тестирование -->
+        <div id="testingSection" class="section hidden">
+            <button id="backToMenuFromTest" class="back-to-menu-btn">← Главное меню</button>
+            <h2>Тестирование</h2>
+            <p class="coming-soon">Раздел в разработке...</p>
         </div>
 
         <!-- Модальное окно для предложения темы -->
@@ -223,6 +271,68 @@
                 </form>
             </div>
         </div>
+
+        <!-- Модальное окно для предложения совместимости стёкол -->
+        <div id="suggestGlassModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeSuggestGlass">&times;</span>
+                <h2>Предложить совместимость стёкол</h2>
+                <form id="suggestGlassForm">
+                    <div class="form-group">
+                        <label for="suggestPhoneModel">Модель телефона *</label>
+                        <input type="text" id="suggestPhoneModel" placeholder="Например: iPhone 12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestCompatibleGlass">Совместимое стекло *</label>
+                        <input type="text" id="suggestCompatibleGlass" placeholder="Например: iPhone 12 Pro" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestGlassComment">Комментарий (необязательно)</label>
+                        <textarea id="suggestGlassComment" rows="3" placeholder="Дополнительная информация..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Отправить предложение</button>
+                        <button type="button" class="cancel-btn" id="cancelSuggestGlass">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно управления связками стёкол (только для админа) -->
+        <div id="manageGlassModal" class="modal hidden">
+            <div class="modal-content large-modal">
+                <span class="close-modal" id="closeManageGlass">&times;</span>
+                <h2>Управление связками стёкол</h2>
+                <div class="glass-management-header">
+                    <button id="addGlassLinkBtn" class="add-glass-link-btn">+ Добавить связку</button>
+                </div>
+                <div id="glassLinksList" class="glass-links-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно добавления связки стёкол (только для админа) -->
+        <div id="addGlassLinkModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeAddGlassLink">&times;</span>
+                <h2>Добавить связку стёкол</h2>
+                <form id="addGlassLinkForm">
+                    <div class="form-group">
+                        <label for="newPhoneModel">Модель телефона *</label>
+                        <input type="text" id="newPhoneModel" placeholder="Например: iPhone 12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newCompatibleModels">Совместимые модели (через запятую) *</label>
+                        <textarea id="newCompatibleModels" rows="4" placeholder="iPhone 12 Pro, iPhone 12 Pro Max" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Добавить связку</button>
+                        <button type="button" class="cancel-btn" id="cancelAddGlassLink">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Quill JS -->
@@ -233,6 +343,7 @@
     <script src="telegram-bot.js?v=20260504132000"></script>
     <script src="user-creation.js?v=20260504132000"></script>
     <script src="auth.js?v=20260504132000"></script>
+    <script src="glass-helper.js?v=20260514084600"></script>
     <script src="script.js?v=20260504132000"></script>
 </body>
 </html>
