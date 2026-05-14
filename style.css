@@ -1318,9 +1318,6 @@ select option {
 
 /* Quill Editor Styles */
 #editor {
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    border-radius: 8px;
     min-height: 300px;
 }
 
@@ -1328,6 +1325,7 @@ select option {
     background: #0f172a !important;
     color: #e2e8f0 !important;
     border-color: #334155 !important;
+    border-radius: 0 0 8px 8px;
 }
 
 .ql-editor {
@@ -1342,6 +1340,7 @@ select option {
 .ql-toolbar {
     background: #1e293b !important;
     border-color: #334155 !important;
+    border-radius: 8px 8px 0 0;
 }
 
 .ql-stroke {
