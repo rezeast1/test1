@@ -1470,6 +1470,10 @@ document.getElementById('resetViewsBtn').addEventListener('click', resetAllViews
 // Инициализируем Telegram Mini App
 initTelegramWebApp();
 
+// Инициализация Firebase и проверка авторизации
+// ВАЖНО: НЕ вызываем checkUserAuth() здесь - она вызовется автоматически
+// после инициализации Firebase через onAuthStateChanged
+
 // Инициализируем Firebase сначала
 // useFirebase = initFirebase(); // УЖЕ ВЫЗВАНО В firebase-config.js
 useFirebase = (typeof database !== 'undefined' && database !== null);
@@ -1477,7 +1481,20 @@ useFirebase = (typeof database !== 'undefined' && database !== null);
 console.log('📊 useFirebase:', useFirebase);
 
 // Проверяем авторизацию пользователя (из auth.js)
-checkUserAuth();
+// ВАЖНО: Вызываем только если Firebase уже инициализирован
+if (typeof auth !== 'undefined' && auth) {
+    checkUserAuth();
+} else {
+    console.log('⏳ Ожидание инициализации Firebase...');
+    // Ждем инициализации Firebase
+    const waitForFirebase = setInterval(() => {
+        if (typeof auth !== 'undefined' && auth) {
+            console.log('✅ Firebase инициализирован, вызываем checkUserAuth()');
+            clearInterval(waitForFirebase);
+            checkUserAuth();
+        }
+    }, 100);
+}
 
 // НЕ загружаем просмотры при старте - они загрузятся после авторизации в auth.js
 // loadViews();
