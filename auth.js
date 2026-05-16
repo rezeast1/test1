@@ -129,33 +129,49 @@ function showAuthModal() {
 function showMainContent() {
     console.log('🔄 showMainContent() вызвана');
 
+    // Создаем отладочный элемент на экране
+    let debugDiv = document.getElementById('debug-info');
+    if (!debugDiv) {
+        debugDiv = document.createElement('div');
+        debugDiv.id = 'debug-info';
+        debugDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; padding: 10px; font-size: 12px; z-index: 99999; max-height: 200px; overflow-y: auto;';
+        document.body.appendChild(debugDiv);
+    }
+
+    const addDebug = (msg) => {
+        console.log(msg);
+        debugDiv.innerHTML += msg + '<br>';
+        debugDiv.scrollTop = debugDiv.scrollHeight;
+    };
+
+    addDebug('🔄 showMainContent() вызвана');
+
     const modal = document.getElementById('userAuthModal');
-    console.log('📋 modal:', modal);
+    addDebug('📋 modal: ' + (modal ? 'найден' : 'НЕ найден'));
 
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('auth-modal-fullscreen');
-        console.log('✅ Модальное окно скрыто');
+        addDebug('✅ Модальное окно скрыто');
     }
 
     const container = document.querySelector('.container');
-    console.log('📋 container:', container);
+    addDebug('📋 container: ' + (container ? 'найден' : 'НЕ найден'));
 
     if (container) {
         container.style.display = 'block';
-        console.log('✅ Контейнер показан');
+        addDebug('✅ Контейнер показан');
     }
 
     // Проверяем, открыто ли приложение в Telegram
     const isTelegramWebApp = typeof Telegram !== 'undefined' && Telegram.WebApp;
-    console.log('📱 Открыто в Telegram:', isTelegramWebApp);
+    addDebug('📱 Открыто в Telegram: ' + isTelegramWebApp);
 
     // Показываем главное меню (с проверкой что функция существует)
-    // Увеличиваем задержку, чтобы все скрипты успели загрузиться
     const showMenuWithRetry = (attempts = 0) => {
         if (typeof showMainMenu === 'function') {
             showMainMenu();
-            console.log('✅ Главное меню показано');
+            addDebug('✅ Главное меню показано через showMainMenu()');
 
             // Прокручиваем страницу наверх
             window.scrollTo(0, 0);
@@ -164,29 +180,46 @@ function showMainContent() {
             if (isTelegramWebApp) {
                 try {
                     Telegram.WebApp.expand();
-                    console.log('✅ Telegram WebApp расширен');
+                    addDebug('✅ Telegram WebApp расширен');
                 } catch (e) {
-                    console.warn('⚠️ Не удалось расширить Telegram WebApp:', e);
+                    addDebug('⚠️ Не удалось расширить Telegram WebApp: ' + e.message);
                 }
             }
+
+            // Удаляем отладочную информацию через 3 секунды
+            setTimeout(() => {
+                if (debugDiv && debugDiv.parentNode) {
+                    debugDiv.parentNode.removeChild(debugDiv);
+                }
+            }, 3000);
         } else if (attempts < 10) {
-            console.warn(`⚠️ showMainMenu не определена, попытка ${attempts + 1}/10`);
+            addDebug(`⚠️ showMainMenu не определена, попытка ${attempts + 1}/10`);
             setTimeout(() => showMenuWithRetry(attempts + 1), 100);
         } else {
-            console.warn('⚠️ showMainMenu не определена после 10 попыток, показываем меню вручную');
+            addDebug('⚠️ showMainMenu не определена после 10 попыток, показываем меню вручную');
             // Показываем главное меню вручную
             const mainMenu = document.getElementById('mainMenu');
             if (mainMenu) {
                 mainMenu.classList.remove('hidden');
-                console.log('✅ Главное меню показано вручную');
+                addDebug('✅ Главное меню показано вручную');
+            } else {
+                addDebug('❌ Элемент mainMenu не найден!');
+                alert('Ошибка: главное меню не найдено. Перезагрузите страницу.');
             }
 
             // Прокручиваем страницу наверх
             window.scrollTo(0, 0);
+
+            // Удаляем отладочную информацию через 5 секунд
+            setTimeout(() => {
+                if (debugDiv && debugDiv.parentNode) {
+                    debugDiv.parentNode.removeChild(debugDiv);
+                }
+            }, 5000);
         }
     };
 
-    setTimeout(() => showMenuWithRetry(), 100);
+    setTimeout(() => showMenuWithRetry(), 200);
 }
 
 // Обновить информацию о пользователе в шапке
@@ -266,6 +299,9 @@ loginForm?.addEventListener('submit', async (e) => {
         await auth.signInWithEmailAndPassword(email, password);
 
         console.log('✅ Вход выполнен успешно');
+
+        // Показываем индикатор загрузки
+        submitBtn.textContent = 'Загрузка...';
 
         loginForm.reset();
 
