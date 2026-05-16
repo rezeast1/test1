@@ -146,20 +146,47 @@ function showMainContent() {
         console.log('✅ Контейнер показан');
     }
 
+    // Проверяем, открыто ли приложение в Telegram
+    const isTelegramWebApp = typeof Telegram !== 'undefined' && Telegram.WebApp;
+    console.log('📱 Открыто в Telegram:', isTelegramWebApp);
+
     // Показываем главное меню (с проверкой что функция существует)
-    setTimeout(() => {
+    // Увеличиваем задержку, чтобы все скрипты успели загрузиться
+    const showMenuWithRetry = (attempts = 0) => {
         if (typeof showMainMenu === 'function') {
             showMainMenu();
             console.log('✅ Главное меню показано');
+
+            // Прокручиваем страницу наверх
+            window.scrollTo(0, 0);
+
+            // Если в Telegram, расширяем окно
+            if (isTelegramWebApp) {
+                try {
+                    Telegram.WebApp.expand();
+                    console.log('✅ Telegram WebApp расширен');
+                } catch (e) {
+                    console.warn('⚠️ Не удалось расширить Telegram WebApp:', e);
+                }
+            }
+        } else if (attempts < 10) {
+            console.warn(`⚠️ showMainMenu не определена, попытка ${attempts + 1}/10`);
+            setTimeout(() => showMenuWithRetry(attempts + 1), 100);
         } else {
-            console.warn('⚠️ showMainMenu не определена, показываем меню вручную');
+            console.warn('⚠️ showMainMenu не определена после 10 попыток, показываем меню вручную');
             // Показываем главное меню вручную
             const mainMenu = document.getElementById('mainMenu');
             if (mainMenu) {
                 mainMenu.classList.remove('hidden');
+                console.log('✅ Главное меню показано вручную');
             }
+
+            // Прокручиваем страницу наверх
+            window.scrollTo(0, 0);
         }
-    }, 100);
+    };
+
+    setTimeout(() => showMenuWithRetry(), 100);
 }
 
 // Обновить информацию о пользователе в шапке
@@ -480,7 +507,21 @@ function showAdminControls() {
     document.getElementById('addArticleBtn').classList.remove('hidden');
     document.getElementById('resetViewsBtn').classList.remove('hidden');
     document.getElementById('manageUsersBtn').classList.remove('hidden');
-    displayAllArticles();
+
+    // Скрываем кнопку "Предложить тему" для администраторов
+    const suggestBtn = document.getElementById('suggestBtn');
+    if (suggestBtn) {
+        suggestBtn.classList.add('hidden');
+    }
+
+    // Показываем кнопку сообщений
+    if (typeof showMessagesButton === 'function') {
+        showMessagesButton();
+    }
+
+    if (typeof displayAllArticles === 'function') {
+        displayAllArticles();
+    }
 }
 
 // Скрыть элементы управления админа
@@ -488,7 +529,21 @@ function hideAdminControls() {
     document.getElementById('addArticleBtn').classList.add('hidden');
     document.getElementById('resetViewsBtn').classList.add('hidden');
     document.getElementById('manageUsersBtn').classList.add('hidden');
-    displayAllArticles();
+
+    // Показываем кнопку "Предложить тему" для обычных пользователей
+    const suggestBtn = document.getElementById('suggestBtn');
+    if (suggestBtn) {
+        suggestBtn.classList.remove('hidden');
+    }
+
+    // Скрываем кнопку сообщений
+    if (typeof hideMessagesButton === 'function') {
+        hideMessagesButton();
+    }
+
+    if (typeof displayAllArticles === 'function') {
+        displayAllArticles();
+    }
 }
 
 // Кнопка выхода

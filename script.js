@@ -109,7 +109,10 @@ function showAdminControls() {
     // document.getElementById('adminLoginBtn').textContent = 'Админ-панель'; // УДАЛЕНО
 
     // Скрываем кнопку "Предложить тему" для администраторов
-    document.getElementById('suggestBtn').classList.add('hidden');
+    const suggestBtn = document.getElementById('suggestBtn');
+    if (suggestBtn) {
+        suggestBtn.classList.add('hidden');
+    }
 
     // Показываем кнопку сообщений
     if (typeof showMessagesButton === 'function') {
@@ -132,7 +135,10 @@ function hideAdminControls() {
     // document.getElementById('adminLoginBtn').textContent = 'Вход для админа'; // УДАЛЕНО
 
     // Показываем кнопку "Предложить тему" для обычных пользователей
-    document.getElementById('suggestBtn').classList.remove('hidden');
+    const suggestBtn = document.getElementById('suggestBtn');
+    if (suggestBtn) {
+        suggestBtn.classList.remove('hidden');
+    }
 
     // Скрываем кнопку сообщений
     if (typeof hideMessagesButton === 'function') {
