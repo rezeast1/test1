@@ -157,7 +157,8 @@ function showAuthModal() {
 function showMainContent() {
     console.log('🔄 showMainContent() вызвана');
 
-    // Создаем отладочный элемент на экране
+    // Создаем отладочный элемент на экране (ЗАКОММЕНТИРОВАНО)
+    /*
     let debugDiv = document.getElementById('debug-info');
     if (!debugDiv) {
         debugDiv = document.createElement('div');
@@ -173,33 +174,34 @@ function showMainContent() {
     };
 
     addDebug('🔄 showMainContent() вызвана');
+    */
 
     const modal = document.getElementById('userAuthModal');
-    addDebug('📋 modal: ' + (modal ? 'найден' : 'НЕ найден'));
+    // addDebug('📋 modal: ' + (modal ? 'найден' : 'НЕ найден'));
 
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('auth-modal-fullscreen');
-        addDebug('✅ Модальное окно скрыто');
+        // addDebug('✅ Модальное окно скрыто');
     }
 
     const container = document.querySelector('.container');
-    addDebug('📋 container: ' + (container ? 'найден' : 'НЕ найден'));
+    // addDebug('📋 container: ' + (container ? 'найден' : 'НЕ найден'));
 
     if (container) {
         container.style.display = 'block';
-        addDebug('✅ Контейнер показан');
+        // addDebug('✅ Контейнер показан');
     }
 
     // Проверяем, открыто ли приложение в Telegram
     const isTelegramWebApp = typeof Telegram !== 'undefined' && Telegram.WebApp;
-    addDebug('📱 Открыто в Telegram: ' + isTelegramWebApp);
+    // addDebug('📱 Открыто в Telegram: ' + isTelegramWebApp);
 
     // Показываем главное меню (с проверкой что функция существует)
     const showMenuWithRetry = (attempts = 0) => {
         if (typeof showMainMenu === 'function') {
             showMainMenu();
-            addDebug('✅ Главное меню показано через showMainMenu()');
+            // addDebug('✅ Главное меню показано через showMainMenu()');
 
             // Прокручиваем страницу наверх
             window.scrollTo(0, 0);
@@ -208,30 +210,32 @@ function showMainContent() {
             if (isTelegramWebApp) {
                 try {
                     Telegram.WebApp.expand();
-                    addDebug('✅ Telegram WebApp расширен');
+                    // addDebug('✅ Telegram WebApp расширен');
                 } catch (e) {
-                    addDebug('⚠️ Не удалось расширить Telegram WebApp: ' + e.message);
+                    // addDebug('⚠️ Не удалось расширить Telegram WebApp: ' + e.message);
                 }
             }
 
             // Удаляем отладочную информацию через 3 секунды
+            /*
             setTimeout(() => {
                 if (debugDiv && debugDiv.parentNode) {
                     debugDiv.parentNode.removeChild(debugDiv);
                 }
             }, 3000);
+            */
         } else if (attempts < 10) {
-            addDebug(`⚠️ showMainMenu не определена, попытка ${attempts + 1}/10`);
+            // addDebug(`⚠️ showMainMenu не определена, попытка ${attempts + 1}/10`);
             setTimeout(() => showMenuWithRetry(attempts + 1), 100);
         } else {
-            addDebug('⚠️ showMainMenu не определена после 10 попыток, показываем меню вручную');
+            // addDebug('⚠️ showMainMenu не определена после 10 попыток, показываем меню вручную');
             // Показываем главное меню вручную
             const mainMenu = document.getElementById('mainMenu');
             if (mainMenu) {
                 mainMenu.classList.remove('hidden');
-                addDebug('✅ Главное меню показано вручную');
+                // addDebug('✅ Главное меню показано вручную');
             } else {
-                addDebug('❌ Элемент mainMenu не найден!');
+                // addDebug('❌ Элемент mainMenu не найден!');
                 alert('Ошибка: главное меню не найдено. Перезагрузите страницу.');
             }
 
@@ -239,11 +243,13 @@ function showMainContent() {
             window.scrollTo(0, 0);
 
             // Удаляем отладочную информацию через 5 секунд
+            /*
             setTimeout(() => {
                 if (debugDiv && debugDiv.parentNode) {
                     debugDiv.parentNode.removeChild(debugDiv);
                 }
             }, 5000);
+            */
         }
     };
 
@@ -417,6 +423,7 @@ addUserForm?.addEventListener('submit', async (e) => {
 
     const username = document.getElementById('newUsername').value.trim();
     const name = document.getElementById('newUserName').value.trim();
+    const store = document.getElementById('newUserStore').value.trim();
     const password = document.getElementById('newUserPassword').value.trim();
     const role = document.getElementById('newUserRole').value;
 
@@ -427,6 +434,11 @@ addUserForm?.addEventListener('submit', async (e) => {
 
     if (password.length < 6) {
         alert('❌ Пароль должен содержать минимум 6 символов');
+        return;
+    }
+
+    if (!store) {
+        alert('❌ Укажите магазин');
         return;
     }
 
@@ -462,6 +474,7 @@ addUserForm?.addEventListener('submit', async (e) => {
         await database.ref('users/' + newUser.uid).set({
             username: username,
             name: name,
+            store: store,
             email: email,
             createdAt: Date.now(),
             role: 'user'
@@ -523,7 +536,7 @@ async function loadUsersList() {
         }
 
         let html = '<table class="users-table">';
-        html += '<thead><tr><th>Username</th><th>Имя</th><th>Дата регистрации</th><th>Роль</th><th>Действия</th></tr></thead>';
+        html += '<thead><tr><th>Username</th><th>Имя</th><th>Магазин</th><th>Дата регистрации</th><th>Роль</th><th>Действия</th></tr></thead>';
         html += '<tbody>';
 
         for (const uid in users) {
@@ -531,11 +544,13 @@ async function loadUsersList() {
             const date = new Date(user.createdAt).toLocaleString('ru-RU');
             const isAdminUser = await checkIfAdmin(uid);
             const role = isAdminUser ? 'Администратор' : 'Пользователь';
+            const store = user.store || 'Не указан';
 
             html += `
                 <tr>
                     <td data-label="Username"><strong>${user.username || 'Не указано'}</strong></td>
                     <td data-label="Имя">${user.name || 'Не указано'}</td>
+                    <td data-label="Магазин">${store}</td>
                     <td data-label="Дата">${date}</td>
                     <td data-label="Роль">${role}</td>
                     <td data-label="Действия">
