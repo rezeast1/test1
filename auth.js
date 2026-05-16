@@ -22,6 +22,34 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.remove('hidden');
         modal.classList.add('auth-modal-fullscreen');
     }
+
+    // Добавляем индикатор загрузки Firebase
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        const firebaseStatus = document.createElement('div');
+        firebaseStatus.id = 'firebase-status';
+        firebaseStatus.style.cssText = 'text-align: center; padding: 10px; font-size: 12px; color: #94a3b8;';
+        firebaseStatus.textContent = '⏳ Подключение к серверу...';
+        loginForm.insertBefore(firebaseStatus, loginForm.firstChild);
+
+        // Проверяем статус Firebase каждые 500мс
+        let checkCount = 0;
+        const checkFirebase = setInterval(() => {
+            checkCount++;
+            if (typeof auth !== 'undefined' && auth && typeof database !== 'undefined' && database) {
+                firebaseStatus.textContent = '✅ Подключено к серверу';
+                firebaseStatus.style.color = '#10b981';
+                setTimeout(() => {
+                    firebaseStatus.style.display = 'none';
+                }, 2000);
+                clearInterval(checkFirebase);
+            } else if (checkCount > 10) {
+                firebaseStatus.textContent = '❌ Ошибка подключения к серверу';
+                firebaseStatus.style.color = '#ef4444';
+                clearInterval(checkFirebase);
+            }
+        }, 500);
+    }
 });
 
 // Проверка авторизации пользователя
@@ -262,13 +290,28 @@ loginForm?.addEventListener('submit', async (e) => {
     // Проверяем инициализацию Firebase
     if (typeof auth === 'undefined' || !auth) {
         console.error('❌ auth не определен');
-        alert('❌ Firebase Authentication не инициализирован. Перезагрузите страницу.');
+        alert('❌ Подключение к серверу не установлено. Подождите несколько секунд и попробуйте снова.');
+
+        // Пытаемся переинициализировать Firebase
+        if (typeof initFirebase === 'function') {
+            console.log('🔄 Попытка переинициализации Firebase...');
+            initFirebase();
+
+            // Даем время на инициализацию
+            setTimeout(() => {
+                if (typeof auth !== 'undefined' && auth) {
+                    alert('✅ Подключение восстановлено. Попробуйте войти снова.');
+                } else {
+                    alert('❌ Не удалось подключиться к серверу. Перезагрузите страницу.');
+                }
+            }, 2000);
+        }
         return;
     }
 
     if (typeof database === 'undefined' || !database) {
         console.error('❌ database не определен');
-        alert('❌ Firebase Database не инициализирован. Перезагрузите страницу.');
+        alert('❌ База данных не инициализирована. Перезагрузите страницу.');
         return;
     }
 
@@ -316,6 +359,8 @@ loginForm?.addEventListener('submit', async (e) => {
             errorMessage = '❌ Неверный пароль';
         } else if (error.code === 'auth/too-many-requests') {
             errorMessage = '❌ Слишком много попыток. Попробуйте позже';
+        } else if (error.code === 'auth/network-request-failed') {
+            errorMessage = '❌ Ошибка сети. Проверьте интернет-соединение';
         }
 
         alert(errorMessage);

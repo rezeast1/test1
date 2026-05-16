@@ -14,25 +14,47 @@ const firebaseConfig = {
 let database;
 let storage;
 let auth;
+let firebaseInitialized = false;
 
 function initFirebase() {
+    console.log('🔧 Попытка инициализации Firebase...');
+    console.log('🔧 typeof firebase:', typeof firebase);
+
     if (typeof firebase !== 'undefined') {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        storage = firebase.storage();
-        auth = firebase.auth();
-        console.log('✅ Firebase инициализирован');
-        console.log('✅ auth:', auth);
-        console.log('✅ database:', database);
-        return true;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            storage = firebase.storage();
+            auth = firebase.auth();
+            firebaseInitialized = true;
+            console.log('✅ Firebase инициализирован');
+            console.log('✅ auth:', auth);
+            console.log('✅ database:', database);
+            return true;
+        } catch (error) {
+            console.error('❌ Ошибка инициализации Firebase:', error);
+            alert('❌ Ошибка подключения к серверу. Проверьте интернет-соединение и перезагрузите страницу.');
+            return false;
+        }
     } else {
         console.error('❌ Firebase SDK не загружен');
+        console.error('❌ Проверьте подключение к интернету');
+
+        // Показываем пользователю ошибку
+        setTimeout(() => {
+            if (!firebaseInitialized) {
+                alert('❌ Не удалось загрузить Firebase SDK. Проверьте интернет-соединение и перезагрузите страницу.');
+            }
+        }, 3000);
+
         return false;
     }
 }
 
-// ВАЖНО: Инициализируем Firebase сразу при загрузке скрипта
-initFirebase();
+// ВАЖНО: Инициализируем Firebase с задержкой, чтобы SDK успел загрузиться
+setTimeout(() => {
+    initFirebase();
+}, 500);
 
 // Получить все просмотры из Firebase
 function getViewsFromFirebase(callback) {
