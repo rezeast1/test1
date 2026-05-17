@@ -333,6 +333,29 @@
             </div>
         </div>
 
+        <!-- Модальное окно редактирования связки стёкол (только для админа) -->
+        <div id="editGlassLinkModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" id="closeEditGlassLink">&times;</span>
+                <h2>Редактировать связку стёкол</h2>
+                <form id="editGlassLinkForm">
+                    <input type="hidden" id="editGlassLinkId">
+                    <div class="form-group">
+                        <label for="editPhoneModel">Модель телефона *</label>
+                        <input type="text" id="editPhoneModel" placeholder="Например: iPhone 12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompatibleModels">Совместимые модели (через запятую) *</label>
+                        <textarea id="editCompatibleModels" rows="4" placeholder="iPhone 12 Pro, iPhone 12 Pro Max" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Сохранить изменения</button>
+                        <button type="button" class="cancel-btn" id="cancelEditGlassLink">Отмена</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Модальное окно управления сообщениями (только для админа) -->
         <div id="messagesModal" class="modal hidden">
             <div class="modal-content large-modal">

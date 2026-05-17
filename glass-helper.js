@@ -321,12 +321,23 @@ async function loadGlassLinks() {
                         <div class="glass-link-model">${link.phoneModel}</div>
                         <div class="glass-link-compatible">Совместимо: ${link.compatibleModels.join(', ')}</div>
                     </div>
-                    <button class="delete-glass-link-btn" data-id="${linkId}">Удалить</button>
+                    <div class="glass-link-actions">
+                        <button class="edit-glass-link-btn" data-id="${linkId}" title="Редактировать">✏️</button>
+                        <button class="delete-glass-link-btn" data-id="${linkId}" title="Удалить">🗑️</button>
+                    </div>
                 </div>
             `;
         });
 
         glassLinksList.innerHTML = html;
+
+        // Добавляем обработчики для кнопок редактирования
+        document.querySelectorAll('.edit-glass-link-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const linkId = btn.dataset.id;
+                openEditGlassLinkModal(linkId, glassLinks[linkId]);
+            });
+        });
 
         // Добавляем обработчики для кнопок удаления
         document.querySelectorAll('.delete-glass-link-btn').forEach(btn => {
@@ -436,6 +447,87 @@ async function deleteGlassLink(linkId) {
         alert('❌ Ошибка удаления: ' + error.message);
     }
 }
+
+// ===== РЕДАКТИРОВАНИЕ СВЯЗКИ =====
+
+const editGlassLinkModal = document.getElementById('editGlassLinkModal');
+const closeEditGlassLink = document.getElementById('closeEditGlassLink');
+const cancelEditGlassLink = document.getElementById('cancelEditGlassLink');
+const editGlassLinkForm = document.getElementById('editGlassLinkForm');
+
+// Открыть форму редактирования связки
+function openEditGlassLinkModal(linkId, linkData) {
+    document.getElementById('editGlassLinkId').value = linkId;
+    document.getElementById('editPhoneModel').value = linkData.phoneModel;
+    document.getElementById('editCompatibleModels').value = linkData.compatibleModels.join(', ');
+
+    editGlassLinkModal.classList.remove('hidden');
+}
+
+// Закрыть форму редактирования
+closeEditGlassLink?.addEventListener('click', () => {
+    editGlassLinkModal.classList.add('hidden');
+    editGlassLinkForm.reset();
+});
+
+cancelEditGlassLink?.addEventListener('click', () => {
+    editGlassLinkModal.classList.add('hidden');
+    editGlassLinkForm.reset();
+});
+
+// Обработка формы редактирования связки
+editGlassLinkForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const linkId = document.getElementById('editGlassLinkId').value;
+    const phoneModel = document.getElementById('editPhoneModel').value.trim();
+    const compatibleModelsStr = document.getElementById('editCompatibleModels').value.trim();
+
+    if (!phoneModel || !compatibleModelsStr) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+    }
+
+    const compatibleModels = compatibleModelsStr.split(',').map(m => m.trim()).filter(m => m);
+
+    if (compatibleModels.length === 0) {
+        alert('Укажите хотя бы одну совместимую модель');
+        return;
+    }
+
+    const submitBtn = editGlassLinkForm.querySelector('.submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+
+    try {
+        if (!database) {
+            throw new Error('Firebase не инициализирован');
+        }
+
+        // Обновляем связку в Firebase
+        await database.ref('glassLinks/' + linkId).update({
+            phoneModel: phoneModel,
+            compatibleModels: compatibleModels,
+            updatedAt: Date.now(),
+            updatedBy: currentUser ? currentUser.email : 'admin'
+        });
+
+        alert('✅ Связка успешно обновлена!');
+        editGlassLinkModal.classList.add('hidden');
+        editGlassLinkForm.reset();
+
+        // Обновляем список
+        loadGlassLinks();
+
+    } catch (error) {
+        console.error('Ошибка обновления связки:', error);
+        alert('❌ Ошибка обновления: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
 
 // Экспортируем функции для использования в других файлах
 window.showMainMenu = showMainMenu;
