@@ -155,14 +155,20 @@ function hideAdminControls() {
 
 // Система подсчета просмотров с поддержкой Firebase
 function loadViews() {
+    console.log('🔄 loadViews() вызвана');
+    console.log('📊 useFirebase:', useFirebase);
+    console.log('📊 database:', typeof database !== 'undefined' ? 'определен' : 'НЕ определен');
+
     if (useFirebase) {
         // Загружаем статьи и просмотры из Firebase
+        console.log('📚 Загружаем статьи из Firebase...');
         loadArticlesFromFirebase(() => {
+            console.log('✅ Callback loadArticlesFromFirebase выполнен');
             displayAllArticles();
         });
     } else {
         // Fallback на localStorage если Firebase не настроен
-        console.log('Используется localStorage (Firebase не настроен)');
+        console.log('⚠️ Используется localStorage (Firebase не настроен)');
         const savedViews = localStorage.getItem('articleViews');
         if (savedViews) {
             const viewsData = JSON.parse(savedViews);
@@ -177,7 +183,6 @@ function loadViews() {
 }
 
 // Загрузить статьи из Firebase
-// Загрузить статьи из Firebase
 function loadArticlesFromFirebase(callback) {
     if (!database) {
         console.error('Firebase не инициализирован');
@@ -185,15 +190,21 @@ function loadArticlesFromFirebase(callback) {
         return;
     }
 
+    console.log('📚 Загрузка статей из Firebase...');
     const articlesRef = database.ref('articles');
 
+    // Используем только .once() для первой загрузки
     articlesRef.once('value', (snapshot) => {
         const firebaseArticles = snapshot.val();
 
+        console.log('📊 Данные из Firebase:', firebaseArticles);
+        console.log('📊 Количество статей:', firebaseArticles ? Object.keys(firebaseArticles).length : 0);
+
         if (!firebaseArticles || Object.keys(firebaseArticles).length === 0) {
-            // Если в Firebase нет статей, загружаем из data.js
-            console.log('Firebase пуст, загружаем статьи из data.js...');
-            syncArticlesToFirebase();
+            // Если в Firebase нет статей
+            console.log('⚠️ Firebase пуст - статей нет');
+            articles.length = 0;
+            displayAllArticles();
         } else {
             // Загружаем статьи из Firebase
             articles.length = 0; // Очищаем массив
@@ -205,26 +216,14 @@ function loadArticlesFromFirebase(callback) {
                 });
             });
 
+            console.log('✅ Загружено статей:', articles.length);
             displayAllArticles();
         }
 
-        callback();
-    });
-
-    // Подписываемся на изменения ПОСЛЕ первой загрузки (только один раз)
-    articlesRef.on('value', (snapshot) => {
-        const firebaseArticles = snapshot.val();
-        if (firebaseArticles) {
-            articles.length = 0;
-            Object.keys(firebaseArticles).forEach(id => {
-                const articleId = parseInt(id);
-                articles.push({
-                    id: articleId,
-                    ...firebaseArticles[id]
-                });
-            });
-            displayAllArticles();
-        }
+        if (callback) callback();
+    }, (error) => {
+        console.error('❌ Ошибка загрузки из Firebase:', error);
+        if (callback) callback();
     });
 }
 
@@ -761,6 +760,10 @@ function hideArticle() {
 }
 
 function displayAllArticles() {
+    console.log('🎨 displayAllArticles() вызвана');
+    console.log('📊 Количество статей в массиве articles:', articles.length);
+    console.log('📊 Статьи:', articles.map(a => a.title));
+
     // Сортируем статьи по количеству просмотров (от большего к меньшему)
     const sortedArticles = [...articles].sort((a, b) => b.views - a.views);
 
@@ -781,7 +784,14 @@ function displayAllArticles() {
             </div>
         `;
     });
-    articlesList.innerHTML = html;
+
+    if (html === '') {
+        console.log('⚠️ HTML пустой - статей нет для отображения');
+        articlesList.innerHTML = '<div class="no-articles">Статьи не найдены</div>';
+    } else {
+        console.log('✅ HTML сгенерирован, обновляем articlesList');
+        articlesList.innerHTML = html;
+    }
 
     // Обработчики для ссылок на статьи
     document.querySelectorAll('.article-link').forEach(link => {
@@ -1478,22 +1488,35 @@ initTelegramWebApp();
 // useFirebase = initFirebase(); // УЖЕ ВЫЗВАНО В firebase-config.js
 useFirebase = (typeof database !== 'undefined' && database !== null);
 
+console.log('📊 Инициализация script.js');
 console.log('📊 useFirebase:', useFirebase);
+console.log('📊 database:', typeof database !== 'undefined' ? 'определен' : 'НЕ определен');
+console.log('📊 auth:', typeof auth !== 'undefined' ? 'определен' : 'НЕ определен');
 
 // Проверяем авторизацию пользователя (из auth.js)
 // ВАЖНО: Вызываем только если Firebase уже инициализирован
 if (typeof auth !== 'undefined' && auth) {
+    console.log('✅ Firebase готов, вызываем checkUserAuth()');
     checkUserAuth();
 } else {
     console.log('⏳ Ожидание инициализации Firebase...');
     // Ждем инициализации Firebase
+    let checkCount = 0;
     const waitForFirebase = setInterval(() => {
-        if (typeof auth !== 'undefined' && auth) {
+        checkCount++;
+        console.log(`⏳ Попытка ${checkCount}/20: auth=${typeof auth !== 'undefined' ? 'есть' : 'нет'}, database=${typeof database !== 'undefined' ? 'есть' : 'нет'}`);
+
+        if (typeof auth !== 'undefined' && auth && typeof database !== 'undefined' && database) {
             console.log('✅ Firebase инициализирован, вызываем checkUserAuth()');
+            useFirebase = true;
             clearInterval(waitForFirebase);
             checkUserAuth();
+        } else if (checkCount > 20) {
+            console.error('❌ Firebase не инициализирован после 20 попыток (10 секунд)');
+            clearInterval(waitForFirebase);
+            alert('❌ Не удалось подключиться к серверу. Перезагрузите страницу.');
         }
-    }, 100);
+    }, 500);
 }
 
 // НЕ загружаем просмотры при старте - они загрузятся после авторизации в auth.js
