@@ -123,8 +123,7 @@ async function searchGlass() {
 
         // Нормализуем запрос для поиска
         const normalizedQuery = query.toLowerCase().trim();
-        let found = false;
-        let html = '';
+        const allCompatibleModels = new Set(); // Используем Set для уникальных моделей
 
         // Ищем совпадения
         Object.keys(glassLinks).forEach(linkId => {
@@ -133,28 +132,47 @@ async function searchGlass() {
 
             // Проверяем точное совпадение или частичное
             if (normalizedModel.includes(normalizedQuery) || normalizedQuery.includes(normalizedModel)) {
-                found = true;
+                // Добавляем главную модель
+                allCompatibleModels.add(link.phoneModel);
 
-                // Формируем список совместимых моделей (каждая на новой строке)
-                const compatibleList = link.compatibleModels
-                    .map(model => `<div class="compatible-model-item">${model}</div>`)
-                    .join('');
-
-                html += `
-                    <div class="glass-result-item">
-                        <div class="glass-model-name">${link.phoneModel}</div>
-                        <div class="glass-compatible-list">
-                            <strong>Совместимые стёкла:</strong>
-                            <div class="compatible-models-container">
-                                ${compatibleList}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                // Добавляем все совместимые модели
+                link.compatibleModels.forEach(model => {
+                    allCompatibleModels.add(model);
+                });
             }
+
+            // Также проверяем, есть ли запрос в списке совместимых моделей
+            link.compatibleModels.forEach(compatibleModel => {
+                const normalizedCompatible = compatibleModel.toLowerCase();
+                if (normalizedCompatible.includes(normalizedQuery) || normalizedQuery.includes(normalizedCompatible)) {
+                    // Добавляем главную модель
+                    allCompatibleModels.add(link.phoneModel);
+
+                    // Добавляем все совместимые модели
+                    link.compatibleModels.forEach(model => {
+                        allCompatibleModels.add(model);
+                    });
+                }
+            });
         });
 
-        if (found) {
+        if (allCompatibleModels.size > 0) {
+            // Формируем единый список всех совместимых моделей
+            const compatibleList = Array.from(allCompatibleModels)
+                .map(model => `<div class="compatible-model-item">${model}</div>`)
+                .join('');
+
+            const html = `
+                <div class="glass-result-item">
+                    <div class="glass-compatible-list">
+                        <strong>Совместимые стёкла:</strong>
+                        <div class="compatible-models-container">
+                            ${compatibleList}
+                        </div>
+                    </div>
+                </div>
+            `;
+
             glassResults.innerHTML = html;
             // Показываем кнопки действий
             document.querySelector('.glass-actions').style.display = 'flex';
